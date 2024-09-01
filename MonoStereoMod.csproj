@@ -1,0 +1,42 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<!-- Import tModLoader mod properties -->
+	<Import Project="..\tModLoader.targets" />
+
+	<!-- General -->
+	<PropertyGroup>
+		
+	</PropertyGroup>
+	<ItemGroup>
+	  <Reference Include="ATL">
+	    <HintPath>ATL.dll</HintPath>
+	  </Reference>
+	  <Reference Include="MonoStereo.Slim">
+	    <HintPath>MonoStereo.Slim.dll</HintPath>
+	  </Reference>
+	  <Reference Include="NAudio">
+	    <HintPath>NAudio.dll</HintPath>
+	  </Reference>
+	  <Reference Include="NAudio.Asio">
+	    <HintPath>NAudio.Asio.dll</HintPath>
+	  </Reference>
+	  <Reference Include="NAudio.Core">
+	    <HintPath>NAudio.Core.dll</HintPath>
+	  </Reference>
+	  <Reference Include="NAudio.Midi">
+	    <HintPath>NAudio.Midi.dll</HintPath>
+	  </Reference>
+	  <Reference Include="NAudio.Wasapi">
+	    <HintPath>NAudio.Wasapi.dll</HintPath>
+	  </Reference>
+	  <Reference Include="NAudio.WinMM">
+	    <HintPath>NAudio.WinMM.dll</HintPath>
+	  </Reference>
+	  <Reference Include="Ude.NetStandard">
+	    <HintPath>Ude.NetStandard.dll</HintPath>
+	  </Reference>
+	</ItemGroup>
+
+	<!-- References -->
+
+</Project>
