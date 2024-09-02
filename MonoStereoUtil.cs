@@ -1,5 +1,7 @@
 ﻿using Microsoft.Xna.Framework.Content;
+using System;
 using System.Reflection;
+using Terraria;
 
 namespace MonoStereoMod
 {
@@ -10,5 +12,7 @@ namespace MonoStereoMod
             .GetMethod("GetPath", BindingFlags.Instance | BindingFlags.NonPublic, [typeof(string)]);
 
         public static string GetPath(this ContentManager instance, string path) => (string)getPath.Invoke(instance, [path]);
+
+        public static void RunOnMainThreadAndWait(Action action) => Main.RunOnMainThread(action).GetAwaiter().GetResult();
     }
 }

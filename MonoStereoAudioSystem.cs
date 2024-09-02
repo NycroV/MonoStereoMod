@@ -12,44 +12,33 @@ using System.Threading.Tasks;
 using Terraria;
 using Terraria.Audio;
 
-namespace MonoStereoMod.AudioSytem
+namespace MonoStereoMod
 {
-    public class MonoStereoAudioSystem : IAudioSystem
+    public class MonoStereoAudioSystem(LegacyAudioSystem oldSystem) : IAudioSystem
     {
         public static void Initialize()
         {
-            AudioManager.Initialize(() => !MonoStereoMod.ModRunning || Main.instance is null);
-            var newSystem = new MonoStereoAudioSystem();
+            if (Main.audioSystem is DisabledAudioSystem)
+                return;
 
-            // Copy any already set data to the new audio engine:
+            // Initialize the MonoStereo engine and create a new audio system to wrap it
+            AudioManager.Initialize(() => !MonoStereoMod.ModRunning || Main.instance is null);
+            var newSystem = new MonoStereoAudioSystem((LegacyAudioSystem)Main.audioSystem);
 
             // Re-assign the audio system to use the new engine
             Main.audioSystem = newSystem;
+            Main.audioSystem.LoadFromSources();
         }
 
-        public MonoStereoAudioSystem()
-        {
-            var contentManager = Main.instance.Content;
-
-            Engine = new AudioEngine(contentManager.GetPath("TerrariaMusic.xgs"));
-            SoundBank = new SoundBank(Engine, contentManager.GetPath("Sound Bank.xsb"));
-            Engine.Update();
-            WaveBank = new WaveBank(Engine, contentManager.GetPath("Wave Bank.xwb"), 0, 512); //TODO, investigate history of windows looping errors with streaming wavebank from disk in FNA in Windows.
-            Engine.Update();
-
-            AudioTracks = new IAudioTrack[Main.maxMusic];
-            TrackNamesByIndex = new Dictionary<int, string>();
-            DefaultTrackByIndex = new Dictionary<int, IAudioTrack>();
-        }
-
-        public IAudioTrack[] AudioTracks;
-        public int MusicReplayDelay;
-        public AudioEngine Engine;
-        public SoundBank SoundBank;
-        public WaveBank WaveBank;
-        public Dictionary<int, string> TrackNamesByIndex;
-        public Dictionary<int, IAudioTrack> DefaultTrackByIndex;
-        public List<IContentSource> FileSources;
+        // Duplicating the reference-type lists means that old track data is not lost on unload
+        public IAudioTrack[] AudioTracks = oldSystem.AudioTracks.ToArray();
+        public int MusicReplayDelay = oldSystem.MusicReplayDelay;
+        public AudioEngine Engine = oldSystem.Engine;
+        public SoundBank SoundBank = oldSystem.SoundBank;
+        public WaveBank WaveBank = oldSystem.WaveBank;
+        public Dictionary<int, string> TrackNamesByIndex = oldSystem.TrackNamesByIndex.ToDictionary();
+        public Dictionary<int, IAudioTrack> DefaultTrackByIndex = oldSystem.DefaultTrackByIndex.ToDictionary();
+        public List<IContentSource> FileSources = oldSystem.FileSources.ToList();
 
         public void LoadFromSources()
         {
