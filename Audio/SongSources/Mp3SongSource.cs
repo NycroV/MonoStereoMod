@@ -29,7 +29,7 @@ namespace MonoStereoMod.Audio.Reading
             stream.Position = position;
             reader = new(stream);
 
-            ISampleProvider sampleProvider = new WaveToSampleProvider(reader);
+            ISampleProvider sampleProvider = reader.ConvertWaveProviderIntoSampleProvider();
 
             if (WaveFormat.SampleRate != AudioStandards.SampleRate)
                 sampleProvider = new WdlResamplingSampleProvider(sampleProvider, AudioStandards.SampleRate);

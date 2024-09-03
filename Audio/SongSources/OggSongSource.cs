@@ -1,6 +1,8 @@
-﻿using MonoStereo.AudioSources;
+﻿using MonoStereo;
+using MonoStereo.AudioSources;
 using MonoStereo.Encoding;
 using NAudio.Wave;
+using NAudio.Wave.SampleProviders;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -11,11 +13,13 @@ namespace MonoStereoMod.Audio.Reading
     {
         public string FileName { get; private set; }
 
-        public OggReader OggReader { get; private set; }
+        internal OggReader OggReader { get; private set; }
+
+        internal ISampleProvider Provider { get; private set; }
 
         public Dictionary<string, string> Comments { get; private set; }
 
-        public WaveFormat WaveFormat { get => OggReader.WaveFormat; }
+        public WaveFormat WaveFormat { get => Provider.WaveFormat; }
 
         public PlaybackState PlaybackState { get; set; } = PlaybackState.Playing;
 
@@ -38,11 +42,25 @@ namespace MonoStereoMod.Audio.Reading
             FileName = fileName;
 
             OggReader = new(stream);
+            Provider = OggReader;
+
             Comments = OggReader.Comments.ComposeComments();
             Comments.ParseLoop(out long loopStart, out long loopEnd);
 
             LoopStart = loopStart;
             LoopEnd = loopEnd;
+
+            if (WaveFormat.SampleRate != AudioStandards.SampleRate)
+                Provider = new WdlResamplingSampleProvider(Provider, AudioStandards.SampleRate);
+
+            if (WaveFormat.Channels != AudioStandards.ChannelCount)
+            {
+                if (WaveFormat.Channels == 1)
+                    Provider = new MonoToStereoSampleProvider(Provider);
+
+                else
+                    throw new ArgumentException("Song file must be in either mono or stereo!", fileName);
+            }
         }
 
         public int Read(float[] buffer, int offset, int count)

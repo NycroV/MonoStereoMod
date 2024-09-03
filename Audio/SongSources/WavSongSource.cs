@@ -27,12 +27,21 @@ namespace MonoStereoMod.Audio.Reading
             }            
 
             sourceBytesPerSample = readerStream.WaveFormat.BitsPerSample / 8 * readerStream.WaveFormat.Channels;
-            sampleChannel = new SampleChannel(readerStream, forceStereo: true);
+            source = readerStream.ConvertWaveProviderIntoSampleProvider();
 
-            if (sampleChannel.WaveFormat.SampleRate != AudioStandards.SampleRate)
-                sampleChannel = new WdlResamplingSampleProvider(sampleChannel, AudioStandards.SampleRate);
+            if (source.WaveFormat.SampleRate != AudioStandards.SampleRate)
+                source = new WdlResamplingSampleProvider(source, AudioStandards.SampleRate);
 
-            destBytesPerSample = 4 * sampleChannel.WaveFormat.Channels;
+            if (source.WaveFormat.Channels != AudioStandards.ChannelCount)
+            {
+                if (WaveFormat.Channels == 1)
+                    source = new MonoToStereoSampleProvider(source);
+
+                else
+                    throw new ArgumentException("Song file must be in either mono or stereo!", fileName);
+            }
+
+            destBytesPerSample = 4 * source.WaveFormat.Channels;
 
             Length = SourceToDest(readerStream.Length);
         }
@@ -68,7 +77,7 @@ namespace MonoStereoMod.Audio.Reading
             }
         }
 
-        public WaveFormat WaveFormat => sampleChannel.WaveFormat;
+        public WaveFormat WaveFormat => source.WaveFormat;
 
         public void Close()
         {
@@ -91,7 +100,7 @@ namespace MonoStereoMod.Audio.Reading
 
                 int samplesToCopy = (int)Math.Min(samplesAvailable, samplesRemaining);
                 if (samplesToCopy > 0)
-                    samplesCopied += sampleChannel.Read(buffer, offset + samplesCopied, samplesToCopy);
+                    samplesCopied += source.Read(buffer, offset + samplesCopied, samplesToCopy);
 
                 if (IsLooped && Position == endIndex)
                 {
@@ -104,7 +113,7 @@ namespace MonoStereoMod.Audio.Reading
             return samplesCopied;
         }
 
-        readonly ISampleProvider sampleChannel;
+        readonly ISampleProvider source;
         readonly int destBytesPerSample;
         readonly int sourceBytesPerSample;
 
