@@ -12,7 +12,7 @@
 	    <HintPath>ATL.dll</HintPath>
 	  </Reference>
 	  <Reference Include="MonoStereo.Slim">
-	    <HintPath>MonoStereo.Slim.dll</HintPath>
+	    <HintPath>lib\MonoStereo.Slim.dll</HintPath>
 	  </Reference>
 	  <Reference Include="NAudio">
 	    <HintPath>NAudio.dll</HintPath>
