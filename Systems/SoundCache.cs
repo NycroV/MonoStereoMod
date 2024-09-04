@@ -20,6 +20,8 @@ namespace MonoStereoMod
 
         internal static readonly Dictionary<ActiveSound, TerrariaSoundEffect> ActiveSounds = [];
 
+        internal static TerrariaSoundEffect Get(ActiveSound activeSound) => TryGet(activeSound, out var sound) ? sound : null;
+
         internal static bool TryGet(ActiveSound sound, out TerrariaSoundEffect effect) => ActiveSounds.TryGetValue(sound, out effect);
 
         internal static void Set(ActiveSound sound, TerrariaSoundEffect effect) => ActiveSounds[sound] = effect;

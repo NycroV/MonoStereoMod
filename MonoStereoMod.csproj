@@ -36,6 +36,9 @@
 	    <HintPath>Ude.NetStandard.dll</HintPath>
 	  </Reference>
 	</ItemGroup>
+	<ItemGroup>
+	  <PackageReference Update="tModLoader.CodeAssist" Version="0.1.2" />
+	</ItemGroup>
 
 	<!-- References -->
 
