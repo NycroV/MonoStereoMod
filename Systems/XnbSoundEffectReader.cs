@@ -218,21 +218,20 @@ namespace MonoStereoMod.Systems
 
                 #endregion
 
-                WaveFormat sourceFormat = WaveFormat.CreateCustomFormat(WaveFormatEncoding.Pcm,
+                WaveFormat sourceFormat = WaveFormat.CreateCustomFormat(
+                    (WaveFormatEncoding)wFormatTag,
                     (int)nSamplesPerSec,
                     nChannels,
                     (int)nAvgBytesPerSec,
                     nBlockAlign,
                     wBitsPerSample);
 
-                IWaveProvider waveProvider = new RawSourceWaveStream(data, 0, data.Length, sourceFormat);
+                WaveStream waveProvider = new RawSourceWaveStream(data, 0, data.Length, sourceFormat);
+                waveProvider = new BlockAlignReductionStream(waveProvider);
+                ISampleProvider sampleProvider = waveProvider.ConvertWaveProviderIntoSampleProvider();
 
-                if (sourceFormat.BitsPerSample != 32)
-                    waveProvider = new Wave16ToFloatProvider(waveProvider);
-
-                WaveToSampleProvider sampleProvider = new(waveProvider);
                 Dictionary<string, string> comments = [];
-
+                
                 if (loopStart != 0)
                     comments.Add("LOOPSTART", loopStart.ToString());
 

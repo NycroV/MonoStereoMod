@@ -16,18 +16,36 @@ namespace MonoStereoMod
 {
     internal class MonoStereoAudioSystem(LegacyAudioSystem oldSystem) : IAudioSystem
     {
+        private static IAudioSystem oldSystem = null;
+
+        private static MonoStereoAudioSystem instance = null;
+
         public static void Initialize()
         {
             if (Main.audioSystem is not LegacyAudioSystem)
                 return;
 
             // Initialize the MonoStereo engine and create a new audio system to wrap it
-            AudioManager.Initialize(() => !MonoStereoMod.ModRunning || Main.instance is null);
+            AudioManager.Initialize(() => !MonoStereoMod.ModRunning || Main.instance is null, 150);
             var newSystem = new MonoStereoAudioSystem((LegacyAudioSystem)Main.audioSystem);
 
             // Re-assign the audio system to use the new engine
+            oldSystem = Main.audioSystem;
+            instance = newSystem;
+
             Main.audioSystem = newSystem;
             Main.audioSystem.LoadFromSources();
+        }
+
+        public static void Shutdown()
+        {
+            Main.audioSystem = oldSystem;
+
+            foreach (MonoStereoAudioTrack track in instance.AudioTracks.Cast<MonoStereoAudioTrack>())
+                track.Dispose();
+
+            oldSystem = null;
+            instance = null;
         }
 
         // Duplicating the reference-type lists means that old track data is not lost on unload
@@ -72,7 +90,14 @@ namespace MonoStereoMod
             LoadFromSources();
         }
 
-        public void Update() { }
+        public void Update()
+        {
+            for (int i = 0; i < AudioTracks.Length; i++)
+            {
+                if (AudioTracks[i] != null)
+                    AudioTracks[i].Update();
+            }
+        }
 
         private static MonoStereoAudioTrack FindReplacementTrack(List<IContentSource> sources, string assetPath)
         {
@@ -90,7 +115,7 @@ namespace MonoStereoMod
                 {
                     ISongSource source = extension switch
                     {
-                        "ogg" => new OggSongSource(contentSource.OpenStream(assetPathWithExtension), assetPathWithExtension),
+                        ".ogg" => new OggSongSource(contentSource.OpenStream(assetPathWithExtension), assetPathWithExtension),
                         ".wav" => new WavSongSource(contentSource.OpenStream(assetPathWithExtension), assetPathWithExtension),
                         ".mp3" => new Mp3SongSource(contentSource.OpenStream(assetPathWithExtension), assetPathWithExtension),
                         _ => null

@@ -51,13 +51,13 @@ namespace MonoStereoMod.Audio.Reading
 
         internal readonly WaveStream readerStream;
 
-        public PlaybackState PlaybackState { get; set; } = PlaybackState.Playing;
+        public PlaybackState PlaybackState { get; set; } = PlaybackState.Stopped;
 
         public Dictionary<string, string> Comments { get; }
 
         public long Length { get; }
 
-        public bool IsLooped { get; set; } = true;
+        public bool IsLooped { get; set; } = false;
 
         public long LoopStart { get; set; }
 

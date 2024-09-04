@@ -141,7 +141,7 @@ namespace MonoStereoMod.Utils
         {
             var sources = contentSources.ToList();
             int index = sources.FindIndex(0, c => c is XnaDirectContentSource);
-            sources.Insert(index + 1, MonoStereoMod.Instance.RootlessSource);
+            sources.Insert(index + 1, MonoStereoMod.Instance.RootlessSource());
             return sources;
         }
 
@@ -155,5 +155,8 @@ namespace MonoStereoMod.Utils
             domain = name.Substring(0, slash);
             subName = name.Substring(slash + 1);
         }
+
+        private static readonly string[] supportedExtensions = [".ogg", ".wav", ".mp3"];
+        public static bool IsSupported(this string extension) => supportedExtensions.Contains(extension);
     }
 }

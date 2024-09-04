@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 namespace MonoStereoMod.Detours
 {
-    internal static class SoundPlayerDetours
+    internal static partial class Detours
     {
         public static SlotId On_SoundPlayer_Play_Inner(On_SoundPlayer.orig_Play_Inner orig, SoundPlayer self, ref SoundStyle style, Microsoft.Xna.Framework.Vector2? position, SoundUpdateCallback updateCallback)
         {

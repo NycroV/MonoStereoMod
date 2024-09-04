@@ -21,21 +21,25 @@ namespace MonoStereoMod.Audio.Reading
 
         public WaveFormat WaveFormat { get => Provider.WaveFormat; }
 
-        public PlaybackState PlaybackState { get; set; } = PlaybackState.Playing;
+        public PlaybackState PlaybackState { get; set; } = PlaybackState.Stopped;
 
         public long Length => OggReader.Length;
 
         public long Position
         {
             get => OggReader.Position;
-            set => OggReader.Position = value;
+            set
+            {
+                if (value != OggReader.Position)
+                    OggReader.Seek(value, SeekOrigin.Begin);
+            }
         }
 
         public long LoopStart { get; set; }
 
         public long LoopEnd { get; set; }
 
-        public bool IsLooped { get; set; } = true;
+        public bool IsLooped { get; set; } = false;
 
         internal OggSongSource(Stream stream, string fileName)
         {

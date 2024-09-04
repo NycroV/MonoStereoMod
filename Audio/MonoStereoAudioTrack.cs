@@ -51,14 +51,23 @@ namespace MonoStereoMod
 
         public override WaveFormat WaveFormat => Source.WaveFormat;
 
-        public override PlaybackState PlaybackState { get; set; } = PlaybackState.Playing;
+        public override PlaybackState PlaybackState { get => Source.PlaybackState; set => Source.PlaybackState = value; }
 
         public bool IsDisposed { get; private set; } = false;
 
+        public override void Close()
+        {
+            if (IsDisposed)
+                base.Close();
+
+            else
+                AudioManager.RemoveSongInput(this);
+        }
+
         public new void Dispose()
         {
-            base.Dispose();
             IsDisposed = true;
+            base.Dispose();
             GC.SuppressFinalize(this);
         }
 

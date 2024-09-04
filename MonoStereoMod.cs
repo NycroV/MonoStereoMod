@@ -1,7 +1,5 @@
 global using static MonoStereoMod.Utils.MonoStereoUtils;
-using static MonoStereoMod.Detours.ActiveSoundDetours;
-using static MonoStereoMod.Detours.SoundPlayerDetours;
-using static MonoStereoMod.Detours.SoundEngineDetours;
+using static MonoStereoMod.Detours.Detours;
 using Terraria;
 using Terraria.Audio;
 using Terraria.ModLoader;
@@ -19,7 +17,7 @@ namespace MonoStereoMod
 
         public static MonoStereoMod Instance { get; private set; } = null;
 
-        internal RootlessTmodContentSource RootlessSource => new(this.File());
+        internal RootlessTmodContentSource RootlessSource() => new(this.File());
 
         internal static void Instance_Exiting(object sender, System.EventArgs e) => ModRunning = false;
 
@@ -39,13 +37,19 @@ namespace MonoStereoMod
 
             On_SoundEngine.Update += On_SoundEngine_Update;
 
-            MonoStereoAudioSystem.Initialize();
+            // These two projectile AIs reference the underlying SoundEffectInstance's of
+            // the default vanilla engine. This modifies them to use our code instead.
+            On_Projectile.AI_190_NightsEdge += On_Projectile_AI_190_NightsEdge;
+            On_Projectile.AI_188_LightsBane += On_Projectile_AI_188_LightsBane;
+
             Instance = this;
+            MonoStereoAudioSystem.Initialize();
         }
 
         public override void Unload()
         {
             ModRunning = false;
+            MonoStereoAudioSystem.Shutdown();
             Main.instance.Exiting -= Instance_Exiting;
             Instance = null;
         }
@@ -118,6 +122,55 @@ namespace MonoStereoMod
         /// <returns>The <see cref="TerrariaSoundEffect"/> that is being played.</returns>
         public static TerrariaSoundEffect PlaySound(in SoundStyle style, Vector2? position = null, SoundUpdateCallback callback = null)
             => TryGetActiveSound(SoundEngine.PlaySound(style, position, callback), out var sound) ? sound : null;
+
+        public override object Call(params object[] args)
+        {
+            switch (args[0].ToString().ToLower())
+            {
+                case "loadsound":
+                    if (args[1] is string filePathWithExtension)
+                    {
+                        bool forceReload = args.Length > 2 && args[2] is bool force && force;
+                        return LoadSound(filePathWithExtension, forceReload);
+                    }
+
+                    if (args[1] is Stream sourceStream && args[2] is string fileName && args[3] is string fileExtensionWithDotAtTheBeginning)
+                    {
+                        bool disposeAfterRead = args.Length > 4 && args[4] is bool dispose && dispose;
+                        return LoadSound(sourceStream, fileName, fileExtensionWithDotAtTheBeginning, disposeAfterRead);
+                    }
+                    break;
+
+                case "getsong":
+                    if (args[1] is int musicIndex)
+                        return GetSong(musicIndex);
+                    break;
+
+                // If you want to use this method via ModCall,
+                // a tuple is returned instead of using `out` values.
+                case "trygetactivesound":
+                    if (args[1] is SlotId slotId)
+                        return (TryGetActiveSound(slotId, out var sound), sound);
+
+                    if (args[1] is ActiveSound activeSound)
+                        return (TryGetActiveSound(activeSound, out var sound), sound);
+                    break;
+
+                case "playsound":
+                    if (args[1] is SoundStyle style)
+                    {
+                        Vector2? position = args.Length > 2 && args[2] is Vector2 soundPosition ? soundPosition : null;
+                        SoundUpdateCallback callback = position is null ?
+                            (args.Length > 2 && args[2] is SoundUpdateCallback soundCallback ? soundCallback : null) :
+                            (args.Length > 3 && args[3] is SoundUpdateCallback soundUpdateCallback ? soundUpdateCallback : null);
+
+                        return PlaySound(style, position, callback);
+                    }
+                    break;
+            }
+
+            return null;
+        }
 
         #endregion
     }

@@ -1,8 +1,10 @@
 ﻿using Microsoft.Xna.Framework.Content;
+using MonoStereo;
 using ReLogic.Content;
 using ReLogic.Content.Sources;
 using ReLogic.Utilities;
 using System;
+using System.Collections;
 using System.IO;
 using System.Reflection;
 using Terraria.Audio;
@@ -19,7 +21,7 @@ namespace MonoStereoMod.Utils
         public static readonly UnifiedRandom SoundStyleRandom = (UnifiedRandom)soundStyleRandom.GetValue(null);
 
         private static readonly MethodInfo getPath = typeof(Terraria.ModLoader.Engine.DistributionPlatform).Assembly
-            .GetType("TMLContentManager")
+            .GetType("Terraria.ModLoader.Engine.TMLContentManager")
             .GetMethod("GetPath", BindingFlags.Instance | BindingFlags.NonPublic, [typeof(string)]);
 
         public static string GetPath(this ContentManager instance, string path) => (string)getPath.Invoke(instance, [path]);
@@ -54,7 +56,7 @@ namespace MonoStereoMod.Utils
 
         public static IContentSource[] Sources(this AssetRepository repository) => (IContentSource[])sources.GetValue(repository);
 
-        private static readonly Type lzxDecoderType = typeof(ContentReader).Assembly.GetType("LzxDecoder");
+        private static readonly Type lzxDecoderType = typeof(ContentReader).Assembly.GetType("Microsoft.Xna.Framework.Content.LzxDecoder");
 
         public static object LzxDecoder(int window) => Activator.CreateInstance(lzxDecoderType, [window]);
 
@@ -65,5 +67,9 @@ namespace MonoStereoMod.Utils
         private static readonly ConstructorInfo contentReader = typeof(ContentReader).GetConstructor([typeof(ContentManager), typeof(Stream), typeof(string), typeof(int), typeof(char), typeof(Action<IDisposable>)]);
 
         public static ContentReader ContentReaderCtor(ContentManager manager, Stream stream, string assetName, int version, char platform, Action<IDisposable> recordDisposableObject) => (ContentReader)contentReader.Invoke([manager, stream, assetName, version, platform, recordDisposableObject]);
+
+        private static readonly FieldInfo activeSongs = typeof(AudioManager).GetField("activeSongs", BindingFlags.Static | BindingFlags.NonPublic);
+        
+        public static ArrayList AudioManagerActiveSongs() => (ArrayList)activeSongs.GetValue(null);
     }
 }

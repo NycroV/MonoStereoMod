@@ -58,13 +58,13 @@ namespace MonoStereoMod.Audio.Reading
 
         public string FileName { get; }
 
-        public PlaybackState PlaybackState { get; set; } = PlaybackState.Playing;
+        public PlaybackState PlaybackState { get; set; } = PlaybackState.Stopped;
 
         public Dictionary<string, string> Comments { get; }
 
         public long Length => reader.Length;
 
-        public bool IsLooped { get; set; } = true;
+        public bool IsLooped { get; set; } = false;
 
         public long LoopStart { get; set; }
 
