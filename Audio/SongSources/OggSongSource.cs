@@ -60,15 +60,14 @@ namespace MonoStereoMod.Audio.Reading
             if (WaveFormat.Channels != AudioStandards.ChannelCount)
             {
                 if (WaveFormat.Channels == 1)
-                {
                     Provider = new MonoToStereoSampleProvider(Provider);
-                    LoopStart = LoopStart <= 0 ? LoopStart : LoopStart * 2;
-                    LoopEnd = LoopEnd <= 0 ? LoopEnd : LoopEnd * 2;
-                }
 
                 else
                     throw new ArgumentException("Song file must be in either mono or stereo!", fileName);
             }
+
+            LoopStart = LoopStart <= 0 ? LoopStart : LoopStart * WaveFormat.Channels;
+            LoopEnd = LoopEnd <= 0 ? LoopEnd : LoopEnd * WaveFormat.Channels;
         }
 
         public int Read(float[] buffer, int offset, int count)
@@ -86,6 +85,9 @@ namespace MonoStereoMod.Audio.Reading
                 long samplesRemaining = count - samplesCopied;
 
                 int samplesToCopy = (int)Math.Min(samplesAvailable, samplesRemaining);
+                if (samplesToCopy % OggReader.WaveFormat.Channels != 0)
+                    samplesToCopy--;
+
                 if (samplesToCopy > 0)
                     samplesCopied += OggReader.Read(buffer, offset + samplesCopied, samplesToCopy);
 

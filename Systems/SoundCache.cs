@@ -18,13 +18,13 @@ namespace MonoStereoMod
     {
         internal static readonly Dictionary<string, CachedSoundEffect> FileCache = [];
 
-        internal static readonly Dictionary<ActiveSound, TerrariaSoundEffect> ActiveSounds = [];
+        internal static readonly Dictionary<ActiveSound, MonoStereoSoundEffect> ActiveSounds = [];
 
-        internal static TerrariaSoundEffect Get(ActiveSound activeSound) => TryGet(activeSound, out var sound) ? sound : null;
+        internal static MonoStereoSoundEffect Get(ActiveSound activeSound) => TryGet(activeSound, out var sound) ? sound : null;
 
-        internal static bool TryGet(ActiveSound sound, out TerrariaSoundEffect effect) => ActiveSounds.TryGetValue(sound, out effect);
+        internal static bool TryGet(ActiveSound sound, out MonoStereoSoundEffect effect) => ActiveSounds.TryGetValue(sound, out effect);
 
-        internal static void Set(ActiveSound sound, TerrariaSoundEffect effect) => ActiveSounds[sound] = effect;
+        internal static void Set(ActiveSound sound, MonoStereoSoundEffect effect) => ActiveSounds[sound] = effect;
 
         internal static CachedSoundEffect Cache(string path, bool forceReload = false)
         {
@@ -67,6 +67,6 @@ namespace MonoStereoMod
             }
         }
 
-        public static TerrariaSoundEffect CreateInstance(this CachedSoundEffect soundEffect) => new(new CachedSoundEffectReader(soundEffect));
+        public static MonoStereoSoundEffect CreateInstance(this CachedSoundEffect soundEffect) => new(new CachedSoundEffectReader(soundEffect));
     }
 }

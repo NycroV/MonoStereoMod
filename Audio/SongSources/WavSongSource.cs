@@ -38,15 +38,14 @@ namespace MonoStereoMod.Audio.Reading
             if (source.WaveFormat.Channels != AudioStandards.ChannelCount)
             {
                 if (WaveFormat.Channels == 1)
-                {
                     source = new MonoToStereoSampleProvider(source);
-                    LoopStart = LoopStart <= 0 ? LoopStart : LoopStart * 2;
-                    LoopEnd = LoopEnd <= 0 ? LoopEnd : LoopEnd * 2;
-                }
 
                 else
                     throw new ArgumentException("Song file must be in either mono or stereo!", fileName);
             }
+
+            LoopStart = LoopStart <= 0 ? LoopStart : LoopStart * WaveFormat.Channels;
+            LoopEnd = LoopEnd <= 0 ? LoopEnd : LoopEnd * WaveFormat.Channels;
         }
 
         internal readonly WaveStream readerStream;

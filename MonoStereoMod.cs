@@ -17,7 +17,7 @@ namespace MonoStereoMod
 
         public static MonoStereoMod Instance { get; private set; } = null;
 
-        internal RootlessTmodContentSource RootlessSource() => new(this.File());
+        internal MonoStereoReplacementSource RootlessSource() => new(this.File());
 
         internal static void Instance_Exiting(object sender, System.EventArgs e) => ModRunning = false;
 
@@ -96,31 +96,31 @@ namespace MonoStereoMod
             => Main.audioSystem is MonoStereoAudioSystem system ? system.AudioTracks[musicIndex] is MonoStereoAudioTrack track ? track : null : null;
 
         /// <summary>
-        /// Attempts to get the <see cref="TerrariaSoundEffect"/> associated with the sound at the specified <paramref name="slotId"/>
+        /// Attempts to get the <see cref="MonoStereoSoundEffect"/> associated with the sound at the specified <paramref name="slotId"/>
         /// </summary>
         /// <param name="slotId">The <see cref="SlotId"/> of the sound you want to retrieve.</param>
-        /// <param name="sound">The resulting <see cref="TerrariaSoundEffect"/>, or <see langword="null"/> if it could not be resolved.</param>
+        /// <param name="sound">The resulting <see cref="MonoStereoSoundEffect"/>, or <see langword="null"/> if it could not be resolved.</param>
         /// <returns>Whether the retrieval was successful.</returns>
-        public static bool TryGetActiveSound(SlotId slotId, out TerrariaSoundEffect sound)
+        public static bool TryGetActiveSound(SlotId slotId, out MonoStereoSoundEffect sound)
         {
             sound = null;
             return SoundEngine.TryGetActiveSound(slotId, out var activeSound) && SoundCache.TryGet(activeSound, out sound);
         }
 
         /// <summary>
-        /// Attempts to get the <see cref="TerrariaSoundEffect"/> associated with the sound at the specified <paramref name="activeSound"/>
+        /// Attempts to get the <see cref="MonoStereoSoundEffect"/> associated with the sound at the specified <paramref name="activeSound"/>
         /// </summary>
         /// <param name="activeSound">The <see cref="ActiveSound"/> component of the sound you want to retrieve.</param>
-        /// <param name="sound">The resulting <see cref="TerrariaSoundEffect"/>, or <see langword="null"/> if it could not be resolved.</param>
+        /// <param name="sound">The resulting <see cref="MonoStereoSoundEffect"/>, or <see langword="null"/> if it could not be resolved.</param>
         /// <returns>Whether the retrieval was successful.</returns>
-        public static bool TryGetActiveSound(ActiveSound activeSound, out TerrariaSoundEffect sound)
+        public static bool TryGetActiveSound(ActiveSound activeSound, out MonoStereoSoundEffect sound)
             => SoundCache.TryGet(activeSound, out sound);
 
         /// <summary>
-        /// Plays a sound and returns the associated <see cref="TerrariaSoundEffect"/>
+        /// Plays a sound and returns the associated <see cref="MonoStereoSoundEffect"/>
         /// </summary>
-        /// <returns>The <see cref="TerrariaSoundEffect"/> that is being played.</returns>
-        public static TerrariaSoundEffect PlaySound(in SoundStyle style, Vector2? position = null, SoundUpdateCallback callback = null)
+        /// <returns>The <see cref="MonoStereoSoundEffect"/> that is being played.</returns>
+        public static MonoStereoSoundEffect PlaySound(in SoundStyle style, Vector2? position = null, SoundUpdateCallback callback = null)
             => TryGetActiveSound(SoundEngine.PlaySound(style, position, callback), out var sound) ? sound : null;
 
         public override object Call(params object[] args)

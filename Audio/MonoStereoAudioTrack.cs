@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework.Audio;
+﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Audio;
 using MonoStereo;
 using MonoStereo.AudioSources;
 using MonoStereo.Filters;
@@ -34,7 +35,7 @@ namespace MonoStereoMod
         public float Pitch
         {
             get => soundControl.PitchFactor;
-            set => soundControl.PitchFactor = value;
+            set => soundControl.PitchFactor = MathHelper.Clamp(value, -1f, 1f);
         }
 
         public float Pan
@@ -70,8 +71,6 @@ namespace MonoStereoMod
             base.Dispose();
             GC.SuppressFinalize(this);
         }
-
-        public override void Play() => base.Play();
 
         public void Stop(AudioStopOptions options) => base.Stop();
 

@@ -227,7 +227,6 @@ namespace MonoStereoMod.Systems
                     wBitsPerSample);
 
                 WaveStream waveProvider = new RawSourceWaveStream(data, 0, data.Length, sourceFormat);
-                waveProvider = new BlockAlignReductionStream(waveProvider);
                 ISampleProvider sampleProvider = waveProvider.ConvertWaveProviderIntoSampleProvider();
 
                 Dictionary<string, string> comments = [];

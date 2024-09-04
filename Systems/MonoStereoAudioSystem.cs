@@ -26,7 +26,7 @@ namespace MonoStereoMod
                 return;
 
             // Initialize the MonoStereo engine and create a new audio system to wrap it
-            AudioManager.Initialize(() => !MonoStereoMod.ModRunning || Main.instance is null, 150);
+            AudioManager.Initialize(() => !MonoStereoMod.ModRunning || Main.instance is null, 100);
             var newSystem = new MonoStereoAudioSystem((LegacyAudioSystem)Main.audioSystem);
 
             // Re-assign the audio system to use the new engine
@@ -122,7 +122,7 @@ namespace MonoStereoMod
                     };
 
                     if (source != null)
-                        return new MonoStereoAudioTrack(new BufferedSongReader(source));
+                        return new MonoStereoAudioTrack(new BufferedSongReader(source, 2f));
                 }
                 catch
                 {

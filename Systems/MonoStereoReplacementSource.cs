@@ -1,21 +1,21 @@
 ﻿using ReLogic.Content.Sources;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Terraria.Initializers;
 using Terraria.ModLoader.Core;
 using Terraria;
 
 namespace MonoStereoMod.Systems
 {
-    internal class RootlessTmodContentSource : ContentSource
+    /// <summary>
+    /// This is essentially the same as a tMod content source,<br/>
+    /// but it only collects supported audio files.
+    /// </summary>
+    internal class MonoStereoReplacementSource : ContentSource
     {
         private readonly TmodFile file;
 
-        internal RootlessTmodContentSource(TmodFile file)
+        internal MonoStereoReplacementSource(TmodFile file)
         {
             this.file = file ?? throw new ArgumentNullException(nameof(file));
 
@@ -23,9 +23,7 @@ namespace MonoStereoMod.Systems
             if (Main.dedServ)
                 return;
 
-            // Filter assets based on the current reader set. Custom mod asset readers will need to be added before content sources are initialized
-            // Unfortunately this means that if a reader is missing, the asset will be missing, causing a misleading error message, but there's little
-            // we can do about that while still supporting multiple files with the same extension. Unless we provided a hardcoded exclusion for .cs files...
+            // Only collects audio files that can be played, no other content type is included
             SetAssetNames(file.Select(fileEntry => fileEntry.Name).Where(fileEntry => Path.GetExtension(fileEntry).IsSupported()));
         }
 

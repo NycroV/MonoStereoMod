@@ -1,14 +1,14 @@
-﻿using MonoStereo;
+﻿using Microsoft.Xna.Framework;
+using MonoStereo;
 using MonoStereo.AudioSources;
 using MonoStereo.Filters;
-using NAudio.Dsp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace MonoStereoMod
 {
-    public class TerrariaSoundEffect : SoundEffect
+    public class MonoStereoSoundEffect : SoundEffect
     {
         public new IEnumerable<AudioFilter> Filters
         {
@@ -22,7 +22,7 @@ namespace MonoStereoMod
         public float Pitch
         {
             get => soundControl.PitchFactor;
-            set => soundControl.PitchFactor = value;
+            set => soundControl.PitchFactor = MathHelper.Clamp(value, -1f, 1f);
         }
 
         public float Pan
@@ -37,7 +37,7 @@ namespace MonoStereoMod
 
         private readonly TerrariaFilter soundControl = new();
 
-        public TerrariaSoundEffect(ISoundEffectSource source) : base(source)
+        public MonoStereoSoundEffect(ISoundEffectSource source) : base(source)
         {
             AddFilter(soundControl);
         }
