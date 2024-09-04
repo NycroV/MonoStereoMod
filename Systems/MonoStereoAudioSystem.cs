@@ -14,7 +14,7 @@ using Terraria.Audio;
 
 namespace MonoStereoMod
 {
-    public class MonoStereoAudioSystem(LegacyAudioSystem oldSystem) : IAudioSystem
+    internal class MonoStereoAudioSystem(LegacyAudioSystem oldSystem) : IAudioSystem
     {
         public static void Initialize()
         {

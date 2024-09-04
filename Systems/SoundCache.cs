@@ -14,17 +14,17 @@ using Terraria.ModLoader;
 
 namespace MonoStereoMod
 {
-    public static class SoundCache
+    internal static class SoundCache
     {
-        private static readonly Dictionary<string, CachedSoundEffect> FileCache = [];
+        internal static readonly Dictionary<string, CachedSoundEffect> FileCache = [];
 
-        public static readonly Dictionary<ActiveSound, TerrariaSoundEffect> ActiveSounds = [];
+        internal static readonly Dictionary<ActiveSound, TerrariaSoundEffect> ActiveSounds = [];
 
-        public static TerrariaSoundEffect Get(ActiveSound sound) => ActiveSounds.TryGetValue(sound, out var effect) ? effect : null;
+        internal static bool TryGet(ActiveSound sound, out TerrariaSoundEffect effect) => ActiveSounds.TryGetValue(sound, out effect);
 
-        public static void Set(ActiveSound sound, TerrariaSoundEffect effect) => ActiveSounds[sound] = effect;
+        internal static void Set(ActiveSound sound, TerrariaSoundEffect effect) => ActiveSounds[sound] = effect;
 
-        public static CachedSoundEffect Cache(string path, bool forceReload = false)
+        internal static CachedSoundEffect Cache(string path, bool forceReload = false)
         {
             if (!forceReload && FileCache.TryGetValue(path, out CachedSoundEffect value))
                 return value;
@@ -45,34 +45,7 @@ namespace MonoStereoMod
                 string extension = contentSource.GetExtension(assetName);
                 
                 using var stream = contentSource.OpenStream(assetName + extension);
-                ISampleProvider sampleProvider;
-                IDictionary<string, string> comments;
-
-                switch (extension)
-                {
-                    case ".ogg":
-                        var ogg = new OggReader(stream);
-                        sampleProvider = ogg;
-                        comments = ogg.Comments.ComposeComments();
-                        break;
-
-                    case ".wav":
-                        comments = stream.ReadComments();
-                        var wav = new WaveFileReader(stream);
-                        sampleProvider = wav.ConvertWaveProviderIntoSampleProvider();
-                        break;
-
-                    case ".mp3":
-                        comments = stream.ReadComments();
-                        Mp3FileReader mp3 = new(stream);
-                        sampleProvider = mp3.ConvertWaveProviderIntoSampleProvider();
-                        break;
-
-                    default:
-                        throw new NotSupportedException("Audio file type is not supported: " + extension);
-                }
-
-                value = new CachedSoundEffect(sampleProvider, path, comments);
+                value = LoadSoundEffect(stream, path, extension);
             }
 
             else

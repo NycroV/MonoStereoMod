@@ -12,8 +12,7 @@ using Terraria.Utilities;
 
 namespace MonoStereoMod.Utils
 {
-#pragma warning disable CS8632 // The annotation for nullable reference types should only be used in code within a '#nullable' annotations context.
-    public static partial class MonoStereoUtils
+    internal static partial class MonoStereoUtils
     {
         private static readonly FieldInfo soundStyleRandom = typeof(SoundStyle).GetField("Random", BindingFlags.Static | BindingFlags.NonPublic);
 
@@ -67,5 +66,4 @@ namespace MonoStereoMod.Utils
 
         public static ContentReader ContentReaderCtor(ContentManager manager, Stream stream, string assetName, int version, char platform, Action<IDisposable> recordDisposableObject) => (ContentReader)contentReader.Invoke([manager, stream, assetName, version, platform, recordDisposableObject]);
     }
-#pragma warning restore CS8632 // The annotation for nullable reference types should only be used in code within a '#nullable' annotations context.
 }

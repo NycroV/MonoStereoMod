@@ -6,7 +6,7 @@ using Terraria.Audio;
 
 namespace MonoStereoMod.Detours
 {
-    public static class ActiveSoundDetours
+    internal static class ActiveSoundDetours
     {
         public static void On_ActiveSound_Play(On_ActiveSound.orig_Play orig, ActiveSound self)
         {

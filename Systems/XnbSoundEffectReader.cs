@@ -7,7 +7,7 @@ using System.IO;
 
 namespace MonoStereoMod.Systems
 {
-    public class XnbSoundEffectReader(Stream inputStream, string fileName)
+    internal class XnbSoundEffectReader(Stream inputStream, string fileName)
     {
         public readonly Stream Stream = inputStream;
 

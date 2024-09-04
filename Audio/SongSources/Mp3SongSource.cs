@@ -18,7 +18,6 @@ namespace MonoStereoMod.Audio.Reading
         internal Mp3SongSource(Stream stream, string fileName)
         {
             FileName = fileName;
-            long position = stream.Position;
 
             Comments = stream.ReadComments();
             Comments.ParseLoop(out long loopStart, out long loopEnd);
@@ -26,18 +25,29 @@ namespace MonoStereoMod.Audio.Reading
             LoopStart = loopStart;
             LoopEnd = loopEnd;
 
-            stream.Position = position;
             reader = new(stream);
 
             ISampleProvider sampleProvider = reader.ConvertWaveProviderIntoSampleProvider();
 
             if (WaveFormat.SampleRate != AudioStandards.SampleRate)
-                sampleProvider = new WdlResamplingSampleProvider(sampleProvider, AudioStandards.SampleRate);
+            {
+                float scalar = AudioStandards.SampleRate / (float)sampleProvider.WaveFormat.SampleRate;
+
+                LoopStart = LoopStart <= 0 ? LoopStart : (long)(LoopStart * scalar);
+                LoopEnd = LoopEnd <= 0 ? LoopEnd : (long)(LoopEnd * scalar);
+
+                LoopStart = LoopStart <= 0 ? LoopStart : LoopStart - (LoopStart % sampleProvider.WaveFormat.Channels);
+                LoopEnd = LoopEnd <= 0 ? LoopEnd : LoopEnd - (LoopEnd % sampleProvider.WaveFormat.Channels);
+            }
 
             if (WaveFormat.Channels != AudioStandards.ChannelCount)
             {
                 if (WaveFormat.Channels == 1)
+                {
                     sampleProvider = new MonoToStereoSampleProvider(sampleProvider);
+                    LoopStart = LoopStart <= 0 ? LoopStart : LoopStart * 2;
+                    LoopEnd = LoopEnd <= 0 ? LoopEnd : LoopEnd * 2;
+                }
 
                 else
                     throw new ArgumentException("Song file must be in either mono or stereo!", fileName);

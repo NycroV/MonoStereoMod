@@ -6,7 +6,6 @@ using System.Linq;
 using System.Collections.Generic;
 using System.IO;
 using ATL;
-using OggVorbisEncoder;
 using Terraria.Localization;
 using Terraria.ModLoader.Exceptions;
 using ReLogic.Content.Sources;
@@ -15,7 +14,7 @@ using NAudio.Wave;
 
 namespace MonoStereoMod.Utils
 {
-    public static partial class MonoStereoUtils
+    internal static partial class MonoStereoUtils
     {
         public static void RunOnMainThreadAndWait(Action action) => Main.RunOnMainThread(action).GetAwaiter().GetResult();
 

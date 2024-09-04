@@ -4,7 +4,7 @@ using Terraria.ID;
 
 namespace MonoStereoMod.Detours
 {
-    public static class SoundEngineDetours
+    internal static class SoundEngineDetours
     {
         public static void On_SoundEngine_Update(On_SoundEngine.orig_Update orig)
         {

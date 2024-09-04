@@ -51,12 +51,16 @@ namespace MonoStereoMod.Audio.Reading
             LoopEnd = loopEnd;
 
             if (WaveFormat.SampleRate != AudioStandards.SampleRate)
-                Provider = new WdlResamplingSampleProvider(Provider, AudioStandards.SampleRate);
+                throw new ArgumentException("Song file must have a 44.1kHz sample rate!", fileName);
 
             if (WaveFormat.Channels != AudioStandards.ChannelCount)
             {
                 if (WaveFormat.Channels == 1)
+                {
                     Provider = new MonoToStereoSampleProvider(Provider);
+                    LoopStart = LoopStart <= 0 ? LoopStart : LoopStart * 2;
+                    LoopEnd = LoopEnd <= 0 ? LoopEnd : LoopEnd * 2;
+                }
 
                 else
                     throw new ArgumentException("Song file must be in either mono or stereo!", fileName);
