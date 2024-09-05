@@ -10,6 +10,11 @@ using Terraria.Localization;
 using Terraria.ModLoader.Exceptions;
 using ReLogic.Content.Sources;
 using MonoStereoMod.Systems;
+using NAudio.Wave;
+using Microsoft.CodeAnalysis.Operations;
+using Mono.Cecil;
+using NAudio.Wave.SampleProviders;
+using MonoStereo.SampleProviders;
 
 namespace MonoStereoMod.Utils
 {
@@ -120,5 +125,69 @@ namespace MonoStereoMod.Utils
 
         private static readonly string[] supportedExtensions = [".ogg", ".wav", ".mp3"];
         public static bool IsSupported(this string extension) => supportedExtensions.Contains(extension);
+
+        public static ISampleProvider Reformat(this ISampleProvider provider, ref long loopStart, ref long loopEnd)
+        {
+            if (provider.WaveFormat.SampleRate != AudioStandards.SampleRate)
+            {
+                provider = new WdlResamplingSampleProvider(provider, AudioStandards.SampleRate);
+                float scalar = AudioStandards.SampleRate / (float)provider.WaveFormat.SampleRate;
+
+                if (loopStart > 0)
+                {
+                    loopStart = (long)(loopStart * scalar);
+                    loopStart -= loopStart % provider.WaveFormat.Channels;
+                }
+
+                if (loopEnd > 0)
+                {
+                    loopEnd = (long)(loopEnd * scalar);
+                    loopEnd -= loopEnd % provider.WaveFormat.Channels;
+                }
+            }
+
+            if (provider.WaveFormat.Channels != AudioStandards.ChannelCount)
+            {
+                if (provider.WaveFormat.Channels == 1)
+                    provider = new MonoToStereoSampleProvider(provider);
+
+                else
+                    throw new ArgumentException("Song file must be in either mono or stereo!", nameof(provider));
+            }
+
+            return provider;
+        }
+
+        public static int LoopedRead(this ISampleProvider sampleProvider, float[] buffer, int offset, int count, ISeekableSampleProvider seekSource, bool isLooped, long length, long loopStart, long loopEnd)
+        {
+            int samplesCopied = 0;
+
+            do
+            {
+                long endIndex = length;
+
+                if (isLooped && loopEnd != -1)
+                    endIndex = loopEnd;
+
+                long samplesAvailable = endIndex - seekSource.Position;
+                long samplesRemaining = count - samplesCopied;
+
+                int samplesToCopy = (int)Math.Min(samplesAvailable, samplesRemaining);
+                if (samplesToCopy % sampleProvider.WaveFormat.Channels != 0)
+                    samplesToCopy--;
+
+                if (samplesToCopy > 0)
+                    samplesCopied += sampleProvider.Read(buffer, offset + samplesCopied, samplesToCopy);
+
+                if (isLooped && seekSource.Position == endIndex)
+                {
+                    long startIndex = Math.Max(0, loopStart);
+                    seekSource.Position = startIndex;
+                }
+            }
+            while (isLooped && samplesCopied < count);
+
+            return samplesCopied;
+        }
     }
 }

@@ -1,11 +1,8 @@
 ﻿using MonoStereo.Encoding;
 using MonoStereo.AudioSources;
 using NAudio.Wave;
-using System;
 using System.Collections.Generic;
 using System.IO;
-using NAudio.Wave.SampleProviders;
-using MonoStereo;
 
 namespace MonoStereoMod.Audio.Reading
 {
@@ -13,11 +10,9 @@ namespace MonoStereoMod.Audio.Reading
     {
         public WavSongSource(Stream stream, string fileName)
         {
+            FileName = fileName;
             Comments = stream.ReadComments();
             Comments.ParseLoop(out long loopStart, out long loopEnd);
-
-            LoopStart = loopStart;
-            LoopEnd = loopEnd;
 
             readerStream = new WaveFileReader(stream);
             if (readerStream.WaveFormat.Encoding != WaveFormatEncoding.Pcm && readerStream.WaveFormat.Encoding != WaveFormatEncoding.IeeeFloat)
@@ -30,32 +25,13 @@ namespace MonoStereoMod.Audio.Reading
             destBytesPerSample = 4 * source.WaveFormat.Channels;
 
             Length = SourceToDest(readerStream.Length);
-            source = readerStream.ToSampleProvider();
+            source = readerStream.ToSampleProvider().Reformat(ref loopStart, ref loopEnd);
 
-            if (WaveFormat.SampleRate != AudioStandards.SampleRate)
-            {
-                source = new WdlResamplingSampleProvider(source, AudioStandards.SampleRate);
-                float scalar = AudioStandards.SampleRate / (float)source.WaveFormat.SampleRate;
-
-                LoopStart = LoopStart <= 0 ? LoopStart : (long)(LoopStart * scalar);
-                LoopEnd = LoopEnd <= 0 ? LoopEnd : (long)(LoopEnd * scalar);
-
-                LoopStart = LoopStart <= 0 ? LoopStart : LoopStart - (LoopStart % source.WaveFormat.Channels);
-                LoopEnd = LoopEnd <= 0 ? LoopEnd : LoopEnd - (LoopEnd % source.WaveFormat.Channels);
-            }
-
-            if (source.WaveFormat.Channels != AudioStandards.ChannelCount)
-            {
-                if (WaveFormat.Channels == 1)
-                    source = new MonoToStereoSampleProvider(source);
-
-                else
-                    throw new ArgumentException("Song file must be in either mono or stereo!", fileName);
-            }
-
-            LoopStart = LoopStart <= 0 ? LoopStart : LoopStart * WaveFormat.Channels;
-            LoopEnd = LoopEnd <= 0 ? LoopEnd : LoopEnd * WaveFormat.Channels;
+            LoopStart = loopStart;
+            LoopEnd = loopEnd;
         }
+
+        public string FileName { get; }
 
         internal readonly WaveStream readerStream;
 
@@ -65,7 +41,7 @@ namespace MonoStereoMod.Audio.Reading
 
         public long Length { get; }
 
-        public bool IsLooped { get; set; } = false;
+        public bool IsLooped { get; set; } = true;
 
         public long LoopStart { get; set; }
 
@@ -95,34 +71,7 @@ namespace MonoStereoMod.Audio.Reading
             readerStream.Dispose();
         }
 
-        public int Read(float[] buffer, int offset, int count)
-        {
-            int samplesCopied = 0;
-
-            do
-            {
-                long endIndex = Length;
-
-                if (IsLooped && LoopEnd != -1)
-                    endIndex = LoopEnd;
-
-                long samplesAvailable = endIndex - Position;
-                long samplesRemaining = count - samplesCopied;
-
-                int samplesToCopy = (int)Math.Min(samplesAvailable, samplesRemaining);
-                if (samplesToCopy > 0)
-                    samplesCopied += source.Read(buffer, offset + samplesCopied, samplesToCopy);
-
-                if (IsLooped && Position == endIndex)
-                {
-                    long startIndex = Math.Max(0, LoopStart);
-                    Position = startIndex;
-                }
-            }
-            while (IsLooped && samplesCopied < count);
-
-            return samplesCopied;
-        }
+        public int Read(float[] buffer, int offset, int count) => source.LoopedRead(buffer, offset, count, this, IsLooped, Length, LoopStart, LoopEnd);
 
         readonly ISampleProvider source;
         readonly int destBytesPerSample;

@@ -1,7 +1,6 @@
 ﻿using MonoStereo.AudioSources;
 using MonoStereoMod.Systems;
 using NAudio.Wave;
-using System;
 using System.Collections.Generic;
 
 namespace MonoStereoMod.Audio.SongSources
@@ -11,18 +10,22 @@ namespace MonoStereoMod.Audio.SongSources
         public CueSongSource(WaveBankCue cue)
         {
             Cue = cue;
-            Source = WaveFormatConversionStream.CreatePcmStream(cue).ToSampleProvider();
+
+            long loopStart = cue.LoopStart;
+            long loopEnd = cue.LoopEnd;
+
+            Source = WaveFormatConversionStream.CreatePcmStream(cue).ToSampleProvider().Reformat(ref loopStart, ref loopEnd);
 
             Comments = [];
 
-            if (cue.LoopStart >= 0)
-                Comments.Add("LOOPSTART", cue.LoopStart.ToString());
+            if (loopStart >= 0)
+                Comments.Add("LOOPSTART", loopStart.ToString());
 
-            if (cue.LoopEnd >= 0)
-                Comments.Add("LOOPEND", cue.LoopEnd.ToString());
+            if (loopEnd >= 0)
+                Comments.Add("LOOPEND", loopEnd.ToString());
 
-            LoopStart = cue.LoopStart;
-            LoopEnd = cue.LoopEnd;
+            LoopStart = loopStart;
+            LoopEnd = loopEnd;
         }
 
         public WaveBankCue Cue { get; private set; }
@@ -50,33 +53,6 @@ namespace MonoStereoMod.Audio.SongSources
             Cue.Dispose();
         }
 
-        public int Read(float[] buffer, int offset, int count)
-        {
-            int samplesCopied = 0;
-
-            do
-            {
-                long endIndex = Length;
-
-                if (IsLooped && LoopEnd != -1)
-                    endIndex = LoopEnd;
-
-                long samplesAvailable = endIndex - Position;
-                long samplesRemaining = count - samplesCopied;
-
-                int samplesToCopy = (int)Math.Min(samplesAvailable, samplesRemaining);
-                if (samplesToCopy > 0)
-                    samplesCopied += Source.Read(buffer, offset + samplesCopied, samplesToCopy);
-
-                if (IsLooped && Position == endIndex)
-                {
-                    long startIndex = Math.Max(0, LoopStart);
-                    Position = startIndex;
-                }
-            }
-            while (IsLooped && samplesCopied < count);
-
-            return samplesCopied;
-        }
+        public int Read(float[] buffer, int offset, int count) => Source.LoopedRead(buffer, offset, count, this, IsLooped, Length, LoopStart, LoopEnd);
     }
 }
