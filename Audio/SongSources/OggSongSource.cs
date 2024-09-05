@@ -55,7 +55,16 @@ namespace MonoStereoMod.Audio.Reading
             LoopEnd = loopEnd;
 
             if (WaveFormat.SampleRate != AudioStandards.SampleRate)
-                throw new ArgumentException("Song file must have a 44.1kHz sample rate!", fileName);
+            {
+                Provider = new WdlResamplingSampleProvider(Provider, AudioStandards.SampleRate);
+                float scalar = AudioStandards.SampleRate / (float)Provider.WaveFormat.SampleRate;
+
+                LoopStart = LoopStart <= 0 ? LoopStart : (long)(LoopStart * scalar);
+                LoopEnd = LoopEnd <= 0 ? LoopEnd : (long)(LoopEnd * scalar);
+
+                LoopStart = LoopStart <= 0 ? LoopStart : LoopStart - (LoopStart % Provider.WaveFormat.Channels);
+                LoopEnd = LoopEnd <= 0 ? LoopEnd : LoopEnd - (LoopEnd % Provider.WaveFormat.Channels);
+            }
 
             if (WaveFormat.Channels != AudioStandards.ChannelCount)
             {

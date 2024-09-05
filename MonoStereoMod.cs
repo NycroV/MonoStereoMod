@@ -17,7 +17,7 @@ namespace MonoStereoMod
 
         public static MonoStereoMod Instance { get; private set; } = null;
 
-        internal MonoStereoReplacementSource RootlessSource() => new(this.File());
+        internal MonoStereoReplacementSource ReplacementSource() => new(this.File());
 
         internal static void Instance_Exiting(object sender, System.EventArgs e) => ModRunning = false;
 

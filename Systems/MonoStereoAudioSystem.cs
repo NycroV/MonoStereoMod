@@ -3,6 +3,8 @@ using MonoStereo;
 using MonoStereo.AudioSources;
 using MonoStereo.AudioSources.Songs;
 using MonoStereoMod.Audio.Reading;
+using MonoStereoMod.Audio.SongSources;
+using MonoStereoMod.Systems;
 using ReLogic.Content.Sources;
 using System;
 using System.Collections;
@@ -26,7 +28,7 @@ namespace MonoStereoMod
                 return;
 
             // Initialize the MonoStereo engine and create a new audio system to wrap it
-            AudioManager.Initialize(() => !MonoStereoMod.ModRunning || Main.instance is null, 100);
+            AudioManager.Initialize(() => !MonoStereoMod.ModRunning || Main.instance is null, 150);
             var newSystem = new MonoStereoAudioSystem((LegacyAudioSystem)Main.audioSystem);
 
             // Re-assign the audio system to use the new engine
@@ -118,11 +120,12 @@ namespace MonoStereoMod
                         ".ogg" => new OggSongSource(contentSource.OpenStream(assetPathWithExtension), assetPathWithExtension),
                         ".wav" => new WavSongSource(contentSource.OpenStream(assetPathWithExtension), assetPathWithExtension),
                         ".mp3" => new Mp3SongSource(contentSource.OpenStream(assetPathWithExtension), assetPathWithExtension),
+                        ".xwb" => new CueSongSource(contentSource.OpenStream(assetPath) as WaveBankCue),
                         _ => null
                     };
 
                     if (source != null)
-                        return new MonoStereoAudioTrack(new BufferedSongReader(source, 2f));
+                        return new MonoStereoAudioTrack(new BufferedSongReader(source, 5f));
                 }
                 catch
                 {

@@ -27,10 +27,11 @@ namespace MonoStereoMod.Audio.Reading
 
             reader = new(stream);
 
-            ISampleProvider sampleProvider = reader.ConvertWaveProviderIntoSampleProvider();
+            ISampleProvider sampleProvider = reader.ToSampleProvider();
 
             if (WaveFormat.SampleRate != AudioStandards.SampleRate)
             {
+                sampleProvider = new WdlResamplingSampleProvider(sampleProvider, AudioStandards.SampleRate);
                 float scalar = AudioStandards.SampleRate / (float)sampleProvider.WaveFormat.SampleRate;
 
                 LoopStart = LoopStart <= 0 ? LoopStart : (long)(LoopStart * scalar);

@@ -76,6 +76,11 @@ namespace MonoStereoMod
 
         public override int ReadSource(float[] buffer, int offset, int count) => base.ReadSource(buffer, offset, count);
 
+        public override void Pause()
+        {
+            base.Pause();
+        }
+
         public void Reuse()
         {
             Source.Position = 0;

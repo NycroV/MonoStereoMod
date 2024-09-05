@@ -227,7 +227,7 @@ namespace MonoStereoMod.Systems
                     wBitsPerSample);
 
                 WaveStream waveProvider = new RawSourceWaveStream(data, 0, data.Length, sourceFormat);
-                ISampleProvider sampleProvider = waveProvider.ConvertWaveProviderIntoSampleProvider();
+                ISampleProvider sampleProvider = waveProvider.ToSampleProvider();
 
                 Dictionary<string, string> comments = [];
                 

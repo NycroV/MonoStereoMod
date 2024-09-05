@@ -21,8 +21,8 @@ namespace MonoStereoMod.Utils
         public static readonly UnifiedRandom SoundStyleRandom = (UnifiedRandom)soundStyleRandom.GetValue(null);
 
         private static readonly MethodInfo getPath = typeof(Terraria.ModLoader.Engine.DistributionPlatform).Assembly
-            .GetType("Terraria.ModLoader.Engine.TMLContentManager")
-            .GetMethod("GetPath", BindingFlags.Instance | BindingFlags.NonPublic, [typeof(string)]);
+            .GetType("Terraria.ModLoader.Engine.TMLContentManager", true)
+            .GetMethod("GetPath", BindingFlags.Instance | BindingFlags.Public, [typeof(string)]);
 
         public static string GetPath(this ContentManager instance, string path) => (string)getPath.Invoke(instance, [path]);
 
