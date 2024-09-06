@@ -92,9 +92,10 @@ namespace MonoStereoMod
             {
                 case "Volume":
                     {
-                        double num = 31.0 * (double)value - 25.0 - 11.94;
-                        float volume = (float)Math.Pow(10.0, num / 20.0);
-                        Volume = volume;
+                        float exponent = (value * 31f - 36.94f) * 0.05f;
+                        float volume = MathF.Pow(10f, exponent);
+                        float naturalEndFadeout = Terraria.Utils.GetLerpValue(0f, 0.074f, value, true);
+                        Volume = volume * naturalEndFadeout;
                         break;
                     }
                 case "Pitch":

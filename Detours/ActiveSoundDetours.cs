@@ -1,5 +1,4 @@
 ﻿using Microsoft.Xna.Framework;
-using MonoStereo;
 using MonoStereoMod.Utils;
 using Terraria;
 using Terraria.Audio;
@@ -97,7 +96,11 @@ namespace MonoStereoMod.Detours
             }
 
             num *= self.Style.Volume * self.Volume;
-            switch (self.Style.Type)
+
+            // Rather than individually set the volume of each song, it is applied in the
+            // MonoStereoAudioSystem with AudioManager.MusicVolume and AudioManager.SoundVolume
+
+            /*switch (self.Style.Type)
             {
                 case SoundType.Sound:
                     num *= Main.soundVolume;
@@ -113,6 +116,17 @@ namespace MonoStereoMod.Detours
                 case SoundType.Music:
                     num *= Main.musicVolume;
                     break;
+            }*/
+
+            // The only difference is we manually apply ambient volume, since MonoStereo
+            // doesn't contain an ambient track category
+            if (self.Style.Type == SoundType.Ambient)
+            {
+                // Ambient tracks go into the sound player
+                num *= Main.ambientVolume / Main.soundVolume;
+
+                if (Main.gameInactive)
+                    num = 0f;
             }
 
             num = MathHelper.Clamp(num, 0f, 1f);

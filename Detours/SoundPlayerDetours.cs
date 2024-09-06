@@ -1,8 +1,8 @@
-﻿using Terraria.Audio;
+﻿using MonoStereoMod.Utils;
 using ReLogic.Utilities;
-using Terraria;
-using MonoStereoMod.Utils;
 using System.Collections.Generic;
+using Terraria;
+using Terraria.Audio;
 
 namespace MonoStereoMod.Detours
 {

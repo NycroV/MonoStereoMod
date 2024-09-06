@@ -69,7 +69,7 @@ namespace MonoStereoMod.Utils
         public static ContentReader ContentReaderCtor(ContentManager manager, Stream stream, string assetName, int version, char platform, Action<IDisposable> recordDisposableObject) => (ContentReader)contentReader.Invoke([manager, stream, assetName, version, platform, recordDisposableObject]);
 
         private static readonly FieldInfo activeSongs = typeof(AudioManager).GetField("activeSongs", BindingFlags.Static | BindingFlags.NonPublic);
-        
+
         public static ArrayList AudioManagerActiveSongs() => (ArrayList)activeSongs.GetValue(null);
     }
 }

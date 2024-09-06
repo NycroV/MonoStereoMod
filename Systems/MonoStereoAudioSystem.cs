@@ -1,9 +1,9 @@
 ﻿using Microsoft.Xna.Framework.Audio;
 using MonoStereo;
 using MonoStereo.AudioSources;
+using MonoStereo.AudioSources.Songs;
 using MonoStereoMod.Audio;
 using MonoStereoMod.Audio.Reading;
-using MonoStereoMod.Systems;
 using ReLogic.Content.Sources;
 using System;
 using System.Collections;
@@ -93,6 +93,9 @@ namespace MonoStereoMod
 
         public void Update()
         {
+            AudioManager.MusicVolume = Main.musicVolume;
+            AudioManager.SoundEffectVolume = Main.soundVolume;
+
             for (int i = 0; i < AudioTracks.Length; i++)
             {
                 if (AudioTracks[i]?.IsPlaying ?? false)
@@ -124,7 +127,7 @@ namespace MonoStereoMod
                     };
 
                     if (source != null)
-                        return new MonoStereoAudioTrack(/*new BufferedSongReader(*/source/*, 2f)*/);
+                        return new MonoStereoAudioTrack(new BufferedSongReader(source, 2f));
                 }
                 catch
                 {

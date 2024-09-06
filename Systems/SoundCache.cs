@@ -1,9 +1,6 @@
 ﻿using MonoStereo;
 using MonoStereo.AudioSources.Sounds;
-using MonoStereo.Encoding;
 using MonoStereoMod.Systems;
-using NAudio.Wave;
-using System;
 using ReLogic.Content;
 using System.Collections.Generic;
 using System.Linq;
@@ -45,7 +42,7 @@ namespace MonoStereoMod
             {
                 var contentSource = mod.Assets.Sources().First(s => s.GetExtension(assetName) is not null);
                 string extension = contentSource.GetExtension(assetName);
-                
+
                 using var stream = contentSource.OpenStream(assetName + extension);
                 value = LoadSoundEffect(stream, path, extension);
             }

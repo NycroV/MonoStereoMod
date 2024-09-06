@@ -1,5 +1,5 @@
-﻿using MonoStereo.Filters;
-using MonoStereo;
+﻿using MonoStereo;
+using MonoStereo.Filters;
 using NAudio.Dsp;
 using System;
 

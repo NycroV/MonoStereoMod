@@ -1,7 +1,6 @@
 ﻿using Microsoft.Xna.Framework.Content;
 using MonoStereo;
 using NAudio.Wave;
-using NAudio.Wave.SampleProviders;
 using System.Collections.Generic;
 using System.IO;
 
@@ -230,7 +229,7 @@ namespace MonoStereoMod.Systems
                 ISampleProvider sampleProvider = waveProvider.ToSampleProvider();
 
                 Dictionary<string, string> comments = [];
-                
+
                 if (loopStart != 0)
                     comments.Add("LOOPSTART", loopStart.ToString());
 
@@ -246,22 +245,22 @@ namespace MonoStereoMod.Systems
         private static readonly List<char> targetPlatformIdentifiers =
         [
             'w', // Windows (DirectX)
-			'x', // Xbox360
-			'm', // WindowsPhone
-			'i', // iOS
-			'a', // Android
-			'd', // DesktopGL
-			'X', // MacOSX
-			'W', // WindowsStoreApp
-			'n', // NativeClient
-			'u', // Ouya
-			'p', // PlayStationMobile
-			'M', // WindowsPhone8
-			'r', // RaspberryPi
-			'P', // Playstation 4
-			'g', // WindowsGL (deprecated for DesktopGL)
-			'l', // Linux (deprecated for DesktopGL)
-		];
+            'x', // Xbox360
+            'm', // WindowsPhone
+            'i', // iOS
+            'a', // Android
+            'd', // DesktopGL
+            'X', // MacOSX
+            'W', // WindowsStoreApp
+            'n', // NativeClient
+            'u', // Ouya
+            'p', // PlayStationMobile
+            'M', // WindowsPhone8
+            'r', // RaspberryPi
+            'P', // Playstation 4
+            'g', // WindowsGL (deprecated for DesktopGL)
+            'l', // Linux (deprecated for DesktopGL)
+        ];
 
         private static ushort Swap(bool swap, ushort x)
         {

@@ -1,5 +1,5 @@
-﻿using MonoStereo.Encoding;
-using MonoStereo.AudioSources;
+﻿using MonoStereo.AudioSources;
+using MonoStereo.Encoding;
 using NAudio.Wave;
 using System.Collections.Generic;
 using System.IO;
@@ -19,7 +19,7 @@ namespace MonoStereoMod.Audio.Reading
             {
                 readerStream = WaveFormatConversionStream.CreatePcmStream(readerStream);
                 readerStream = new BlockAlignReductionStream(readerStream);
-            }            
+            }
 
             sourceBytesPerSample = readerStream.WaveFormat.BitsPerSample / 8 * readerStream.WaveFormat.Channels;
             destBytesPerSample = 4 * source.WaveFormat.Channels;
@@ -77,7 +77,7 @@ namespace MonoStereoMod.Audio.Reading
         readonly int destBytesPerSample;
         readonly int sourceBytesPerSample;
 
-        private long SourceToDest(long sourceBytes) => destBytesPerSample * (sourceBytes / sourceBytesPerSample);        
+        private long SourceToDest(long sourceBytes) => destBytesPerSample * (sourceBytes / sourceBytesPerSample);
         private long DestToSource(long destBytes) => sourceBytesPerSample * (destBytes / destBytesPerSample);
     }
 }

@@ -1,20 +1,18 @@
-﻿using MonoStereo;
-using System;
-using Terraria;
-using Terraria.Audio;
-using System.Linq;
-using System.Collections.Generic;
-using System.IO;
-using ATL;
-using Terraria.Localization;
-using Terraria.ModLoader.Exceptions;
-using ReLogic.Content.Sources;
+﻿using ATL;
+using MonoStereo;
+using MonoStereo.SampleProviders;
 using MonoStereoMod.Systems;
 using NAudio.Wave;
-using Microsoft.CodeAnalysis.Operations;
-using Mono.Cecil;
 using NAudio.Wave.SampleProviders;
-using MonoStereo.SampleProviders;
+using ReLogic.Content.Sources;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using Terraria;
+using Terraria.Audio;
+using Terraria.Localization;
+using Terraria.ModLoader.Exceptions;
 
 namespace MonoStereoMod.Utils
 {
@@ -206,18 +204,44 @@ namespace MonoStereoMod.Utils
 
         private static readonly int[] adaptationTable =
         [
-            230, 230, 230, 230, 307, 409, 512, 614,
-            768, 614, 512, 409, 307, 230, 230, 230
+            230,
+            230,
+            230,
+            230,
+            307,
+            409,
+            512,
+            614,
+            768,
+            614,
+            512,
+            409,
+            307,
+            230,
+            230,
+            230
         ];
 
         private static readonly int[] adaptationCoeff1 =
         [
-            256, 512, 0, 192, 240, 460, 392
+            256,
+            512,
+            0,
+            192,
+            240,
+            460,
+            392
         ];
 
         private static readonly int[] adaptationCoeff2 =
         [
-            0, -256, 0, 64, 0, -208, -232
+            0,
+            -256,
+            0,
+            64,
+            0,
+            -208,
+            -232
         ];
 
         private struct MsAdpcmState
@@ -253,7 +277,7 @@ namespace MonoStereoMod.Utils
         /// <summary>
         /// Converts a buffer of Adpcm data to 16-bit pcm
         /// </summary>
-      
+
         internal static byte[] ConvertMsAdpcmToPcm(byte[] buffer, int offset, int count, int channels, int blockAlignment)
         {
             MsAdpcmState channel0 = new();

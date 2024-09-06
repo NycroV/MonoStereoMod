@@ -2,7 +2,6 @@
 using MonoStereo.Encoding;
 using MonoStereoMod.Systems;
 using NAudio.Wave;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
