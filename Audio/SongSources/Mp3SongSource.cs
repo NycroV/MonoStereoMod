@@ -1,7 +1,6 @@
 ﻿using MonoStereo.AudioSources;
 using MonoStereo.Encoding;
 using NAudio.Wave;
-using System;
 using System.Collections.Generic;
 using System.IO;
 

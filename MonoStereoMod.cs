@@ -8,6 +8,9 @@ using MonoStereo;
 using System.IO;
 using ReLogic.Utilities;
 using Microsoft.Xna.Framework;
+using static MonoStereoMod.Detours.MusicLoaderDetours;
+using System.Reflection;
+using MonoStereoMod.Detours;
 
 namespace MonoStereoMod
 {
@@ -17,14 +20,13 @@ namespace MonoStereoMod
 
         public static MonoStereoMod Instance { get; private set; } = null;
 
-        internal MonoStereoReplacementSource ReplacementSource() => new(this.File());
-
         internal static void Instance_Exiting(object sender, System.EventArgs e) => ModRunning = false;
 
         public override void Load()
         {
             ModRunning = true;
             Main.instance.Exiting += Instance_Exiting;
+            Main.ignoreErrors = false;
 
             On_ActiveSound.Play += On_ActiveSound_Play;
             On_ActiveSound.Stop += On_ActiveSound_Stop;
@@ -36,6 +38,8 @@ namespace MonoStereoMod
             On_SoundPlayer.Update += On_SoundPlayer_Update;
 
             On_SoundEngine.Update += On_SoundEngine_Update;
+
+            On_MusicLoader.LoadMusic += On_MusicLoader_LoadMusic;
 
             // These two projectile AIs reference the underlying SoundEffectInstance's of
             // the default vanilla engine. This modifies them to use our code instead.

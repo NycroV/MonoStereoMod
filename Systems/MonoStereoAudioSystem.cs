@@ -1,9 +1,8 @@
 ﻿using Microsoft.Xna.Framework.Audio;
 using MonoStereo;
 using MonoStereo.AudioSources;
-using MonoStereo.AudioSources.Songs;
+using MonoStereoMod.Audio;
 using MonoStereoMod.Audio.Reading;
-using MonoStereoMod.Audio.SongSources;
 using MonoStereoMod.Systems;
 using ReLogic.Content.Sources;
 using System;
@@ -96,7 +95,7 @@ namespace MonoStereoMod
         {
             for (int i = 0; i < AudioTracks.Length; i++)
             {
-                if (AudioTracks[i] != null)
+                if (AudioTracks[i]?.IsPlaying ?? false)
                     AudioTracks[i].Update();
             }
         }
@@ -120,12 +119,12 @@ namespace MonoStereoMod
                         ".ogg" => new OggSongSource(contentSource.OpenStream(assetPathWithExtension), assetPathWithExtension),
                         ".wav" => new WavSongSource(contentSource.OpenStream(assetPathWithExtension), assetPathWithExtension),
                         ".mp3" => new Mp3SongSource(contentSource.OpenStream(assetPathWithExtension), assetPathWithExtension),
-                        ".xwb" => new CueSongSource(contentSource.OpenStream(assetPath) as WaveBankCue),
+                        ".xwb" => new CueSongSource(contentSource.OpenStream(assetPath) as CueReader),
                         _ => null
                     };
 
                     if (source != null)
-                        return new MonoStereoAudioTrack(new BufferedSongReader(source, 5f));
+                        return new MonoStereoAudioTrack(/*new BufferedSongReader(*/source/*, 2f)*/);
                 }
                 catch
                 {
@@ -148,6 +147,8 @@ namespace MonoStereoMod
 
         public void UpdateMisc()
         {
+            var state = AudioManager.MasterMixer.PlaybackState;
+
             if (Main.curMusic != Main.newMusic)
                 MusicReplayDelay = 0;
 

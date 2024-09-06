@@ -45,19 +45,21 @@ namespace MonoStereoMod.Utils
             return new CachedSoundEffect(sampleProvider, fileName, comments);
         }
 
-        public static string ReadNullTerminatedString(this BinaryReader reader)
+        public static string ReadNullTerminatedString(this BinaryReader reader, int bytes)
         {
+            byte[] buffer = reader.ReadBytes(bytes);
             List<char> chars = [];
-            char currentCharacter;
 
-            do
+            for (int i = 0; i < buffer.Length; i++)
             {
-                currentCharacter = (char)reader.ReadByte();
+                char letter = (char)buffer[i];
 
-                if (currentCharacter != '\0')
-                    chars.Add(currentCharacter);
+                if (letter != '\0')
+                    chars.Add(letter);
+
+                else
+                    break;
             }
-            while (currentCharacter != '\0');
 
             return string.Concat(chars);
         }
@@ -66,8 +68,7 @@ namespace MonoStereoMod.Utils
         {
             BinaryReader reader = readers[0];
             int version = reader.ReadInt32(); // 46 - XACT 3.0
-
-            reader.BaseStream.Seek(12, SeekOrigin.Begin);
+            int headerVersion = reader.ReadInt32();
 
             int baseOffset = reader.ReadInt32(); // Bank data
             int baseSize = reader.ReadInt32();
@@ -78,7 +79,6 @@ namespace MonoStereoMod.Utils
             int extraSize = reader.ReadInt32();
             int namesOffset = reader.ReadInt32(); // Entry names
             int namesSize = reader.ReadInt32();
-            int namesEntrySize = 64;
 
             uint dataOffset = (uint)reader.ReadInt32();
             int dataSize = reader.ReadInt32();
@@ -87,18 +87,14 @@ namespace MonoStereoMod.Utils
 
             uint baseFlags = reader.ReadUInt32();
             int totalSubsongs = reader.ReadInt32();
-            string wavebankName = reader.ReadNullTerminatedString();
-
-            // This seeks to the end of the max name length
-            // (64 bytes + the 8 bytes we read for baseFlags and totalSubsongs)
-            reader.BaseStream.Seek(baseOffset + namesEntrySize * 8, SeekOrigin.Begin);
+            string wavebankName = reader.ReadNullTerminatedString(64);
 
             int entryElemSize = reader.ReadInt32();
             int metaNameEntrySize = reader.ReadInt32();
 
             int entryAlignment = reader.ReadInt32();
             uint format = (uint)reader.ReadInt32();
-            int buildTime = reader.ReadInt32();
+            long buildTime = reader.ReadInt64();
 
             List<WaveBankCue> cues = [];
 
