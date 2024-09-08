@@ -8,32 +8,8 @@
 		
 	</PropertyGroup>
 	<ItemGroup>
-	  <Reference Include="ATL">
-	    <HintPath>ATL.dll</HintPath>
-	  </Reference>
-	  <Reference Include="MonoStereo.Slim">
-	    <HintPath>lib\MonoStereo.Slim.dll</HintPath>
-	  </Reference>
-	  <Reference Include="NAudio">
-	    <HintPath>NAudio.dll</HintPath>
-	  </Reference>
-	  <Reference Include="NAudio.Asio">
-	    <HintPath>NAudio.Asio.dll</HintPath>
-	  </Reference>
-	  <Reference Include="NAudio.Core">
-	    <HintPath>NAudio.Core.dll</HintPath>
-	  </Reference>
-	  <Reference Include="NAudio.Midi">
-	    <HintPath>NAudio.Midi.dll</HintPath>
-	  </Reference>
-	  <Reference Include="NAudio.Wasapi">
-	    <HintPath>NAudio.Wasapi.dll</HintPath>
-	  </Reference>
-	  <Reference Include="NAudio.WinMM">
-	    <HintPath>NAudio.WinMM.dll</HintPath>
-	  </Reference>
-	  <Reference Include="Ude.NetStandard">
-	    <HintPath>Ude.NetStandard.dll</HintPath>
+	  <Reference Include="MonoStereo.Slim.Dependencies">
+	    <HintPath>lib\MonoStereo.Slim.Dependencies.dll</HintPath>
 	  </Reference>
 	</ItemGroup>
 	<ItemGroup>
