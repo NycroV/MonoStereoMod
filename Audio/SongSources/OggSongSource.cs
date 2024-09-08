@@ -1,4 +1,5 @@
-﻿using MonoStereo.AudioSources;
+﻿using MonoStereo;
+using MonoStereo.AudioSources;
 using MonoStereo.Encoding;
 using NAudio.Wave;
 using System.Collections.Generic;
@@ -28,7 +29,7 @@ namespace MonoStereoMod.Audio.Reading
             set
             {
                 if (value != OggReader.Position)
-                    OggReader.Seek(value, SeekOrigin.Begin);
+                    OggReader.Position = value;
             }
         }
 
@@ -42,16 +43,16 @@ namespace MonoStereoMod.Audio.Reading
         {
             FileName = fileName;
 
-            OggReader = new(stream);
+            OggReader = new(stream, true);
             Comments = OggReader.Comments.ComposeComments();
-            Comments.ParseLoop(out long loopStart, out long loopEnd, WaveFormat.Channels);
+            Comments.ParseLoop(out long loopStart, out long loopEnd, AudioStandards.ChannelCount);
 
             Provider = OggReader.Reformat(ref loopStart, ref loopEnd);
             LoopStart = loopStart;
             LoopEnd = loopEnd;
         }
 
-        public int Read(float[] buffer, int offset, int count) => OggReader.LoopedRead(buffer, offset, count, this, IsLooped, Length, LoopStart, LoopEnd);
+        public int Read(float[] buffer, int offset, int count) => Provider.LoopedRead(buffer, offset, count, this, IsLooped, Length, LoopStart, LoopEnd);
 
         public void Close() => OggReader.Dispose();
     }

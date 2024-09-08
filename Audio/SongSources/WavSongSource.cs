@@ -1,4 +1,5 @@
-﻿using MonoStereo.AudioSources;
+﻿using MonoStereo;
+using MonoStereo.AudioSources;
 using MonoStereo.Encoding;
 using NAudio.Wave;
 using System.Collections.Generic;
@@ -14,7 +15,7 @@ namespace MonoStereoMod.Audio.Reading
             Comments = stream.ReadComments();
 
             readerStream = new WaveFileReader(stream);
-            Comments.ParseLoop(out long loopStart, out long loopEnd, readerStream.WaveFormat.Channels);
+            Comments.ParseLoop(out long loopStart, out long loopEnd, AudioStandards.ChannelCount);
 
             if (readerStream.WaveFormat.Encoding != WaveFormatEncoding.Pcm && readerStream.WaveFormat.Encoding != WaveFormatEncoding.IeeeFloat)
             {

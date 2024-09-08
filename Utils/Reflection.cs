@@ -71,5 +71,9 @@ namespace MonoStereoMod.Utils
         private static readonly FieldInfo activeSongs = typeof(AudioManager).GetField("activeSongs", BindingFlags.Static | BindingFlags.NonPublic);
 
         public static ArrayList AudioManagerActiveSongs() => (ArrayList)activeSongs.GetValue(null);
+
+        private static readonly MethodInfo resizeArrays = typeof(ILoader).GetMethod("ResizeArrays", BindingFlags.NonPublic | BindingFlags.Instance);
+
+        public static void ResizeArrays(this ILoader loader) => resizeArrays.Invoke(loader, null);
     }
 }

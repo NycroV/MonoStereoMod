@@ -1,4 +1,5 @@
 ﻿using MonoStereo.AudioSources;
+using MonoStereo.Encoding;
 using MonoStereoMod.Systems;
 using NAudio.Wave;
 using System;
@@ -23,6 +24,8 @@ namespace MonoStereoMod.Audio
 
             if (loopEnd >= 0)
                 Comments.Add("LOOPEND", loopEnd.ToString());
+
+            Comments.ParseLoop(out loopStart, out loopEnd, WaveFormat.Channels);
 
             LoopStart = loopStart;
             LoopEnd = loopEnd;
@@ -49,7 +52,7 @@ namespace MonoStereoMod.Audio
             set => CueReader.Position = value / WaveFormat.Channels * CueReader.WaveFormat.BlockAlign;
         }
 
-        public WaveFormat WaveFormat => CueReader.WaveFormat;
+        public WaveFormat WaveFormat => Source.WaveFormat;
 
         public void OnStop()
         {

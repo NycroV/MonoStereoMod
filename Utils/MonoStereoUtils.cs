@@ -4,7 +4,6 @@ using MonoStereo.SampleProviders;
 using MonoStereoMod.Systems;
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
-using Newtonsoft.Json.Linq;
 using ReLogic.Content.Sources;
 using System;
 using System.Collections.Generic;
@@ -124,8 +123,8 @@ namespace MonoStereoMod.Utils
         {
             if (provider.WaveFormat.SampleRate != AudioStandards.SampleRate)
             {
-                provider = new WdlResamplingSampleProvider(provider, AudioStandards.SampleRate);
                 float scalar = AudioStandards.SampleRate / (float)provider.WaveFormat.SampleRate;
+                provider = new WdlResamplingSampleProvider(provider, AudioStandards.SampleRate);
 
                 if (loopStart > 0)
                 {
@@ -147,12 +146,6 @@ namespace MonoStereoMod.Utils
 
                 else
                     throw new ArgumentException("Song file must be in either mono or stereo!", nameof(provider));
-
-                if (loopStart > 0)
-                    loopStart *= provider.WaveFormat.Channels;
-
-                if (loopEnd > 0)
-                    loopEnd *= provider.WaveFormat.Channels;
             }
 
             return provider;
@@ -163,14 +156,18 @@ namespace MonoStereoMod.Utils
 
         public static List<IContentSource> InsertMonoStereoSource(this List<IContentSource> contentSources)
         {
-            var source = //MonoStereoMod.Instance.GetReplacementSource();
-                         new CueReadingContentSource();
+            var source = new CueReadingContentSource();
+            int index = contentSources.FindIndex(0, c => c is XnaDirectContentSource);
+            contentSources.Insert(index + 1, source);
+            return contentSources;
+        }
 
-            var sources = contentSources.ToList();
-            int index = sources.FindIndex(0, c => c is XnaDirectContentSource);
-            sources.Insert(index + 1, source);
-
-            return sources;
+        public static List<IContentSource> RemoveMonoStereoSource(this List<IContentSource> contentSources)
+        {
+            int index = contentSources.FindIndex(c => c is CueReadingContentSource);
+            if (index >= 0)
+                contentSources.RemoveAt(index);
+            return contentSources;
         }
 
         public static int LoopedRead(this ISampleProvider sampleProvider, float[] buffer, int offset, int count, ISeekableSampleProvider seekSource, bool isLooped, long length, long loopStart, long loopEnd)
@@ -184,7 +181,7 @@ namespace MonoStereoMod.Utils
                 if (isLooped && loopEnd != -1)
                     endIndex = loopEnd;
 
-                long samplesAvailable = endIndex - seekSource.Position;
+                long samplesAvailable = endIndex - seekSource.Position; // 798304 -> 798940
                 long samplesRemaining = count - samplesCopied;
 
                 int samplesToCopy = (int)Math.Min(samplesAvailable, samplesRemaining);

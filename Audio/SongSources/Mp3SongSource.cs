@@ -1,4 +1,5 @@
-﻿using MonoStereo.AudioSources;
+﻿using MonoStereo;
+using MonoStereo.AudioSources;
 using MonoStereo.Encoding;
 using NAudio.Wave;
 using System.Collections.Generic;
@@ -17,7 +18,7 @@ namespace MonoStereoMod.Audio.Reading
             FileName = fileName;
 
             Comments = stream.ReadComments();
-            Comments.ParseLoop(out long loopStart, out long loopEnd, WaveFormat.Channels);
+            Comments.ParseLoop(out long loopStart, out long loopEnd, AudioStandards.ChannelCount);
 
             reader = new(stream);
             provider = reader.ToSampleProvider().Reformat(ref loopStart, ref loopEnd);
@@ -32,7 +33,7 @@ namespace MonoStereoMod.Audio.Reading
 
         public Dictionary<string, string> Comments { get; }
 
-        public long Length => reader.Length;
+        public long Length => reader.Length / reader.WaveFormat.BlockAlign * reader.WaveFormat.Channels;
 
         public bool IsLooped { get; set; } = true;
 
@@ -40,7 +41,7 @@ namespace MonoStereoMod.Audio.Reading
 
         public long LoopEnd { get; set; }
 
-        public long Position { get => reader.Position; set => reader.Position = value; }
+        public long Position { get => reader.Position / reader.WaveFormat.BlockAlign * provider.WaveFormat.Channels; set => reader.Position = value / provider.WaveFormat.Channels * reader.WaveFormat.BlockAlign; }
 
         public WaveFormat WaveFormat => provider.WaveFormat;
 
