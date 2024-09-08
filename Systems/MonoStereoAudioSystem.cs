@@ -94,7 +94,7 @@ namespace MonoStereoMod
         public void Update()
         {
             AudioManager.MusicVolume = Main.musicVolume.GetRealVolume();
-            AudioManager.SoundEffectVolume = Main.soundVolume.GetRealVolume();
+            AudioManager.SoundEffectVolume = Main.soundVolume;
 
             for (int i = 0; i < AudioTracks.Length; i++)
             {

@@ -1,4 +1,4 @@
 displayName = MonoStereo
 author = Nycro
-version = 1.0
-dllReferences = ATL, MonoStereo.Slim, NAudio.Asio, NAudio.Core, NAudio, NAudio.Midi, NAudio.Wasapi, NAudio.WinMM, Ude.NetStandard
+version = 1.0.0
+dllReferences = MonoStereo.Slim.Dependencies

@@ -94,11 +94,17 @@ namespace MonoStereoMod
             {
                 case "Volume":
                     {
+                        // The vanilla curve is applied to the music mixer
                         if (value == Main.musicVolume)
+                        {
+                            Volume = 1f;
                             break;
+                        }
 
+                        // Offset the value to still follow the vanilla curve
+                        // (which is applied to the music mixer)
                         value /= Main.musicVolume;
-                        Volume = value; // The vanilla curve is applied to the music mixer
+                        Volume = value;
                         break;
                     }
                 case "Pitch":
