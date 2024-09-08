@@ -17,7 +17,7 @@ namespace MonoStereoMod.Audio.Reading
             FileName = fileName;
 
             Comments = stream.ReadComments();
-            Comments.ParseLoop(out long loopStart, out long loopEnd);
+            Comments.ParseLoop(out long loopStart, out long loopEnd, WaveFormat.Channels);
 
             reader = new(stream);
             provider = reader.ToSampleProvider().Reformat(ref loopStart, ref loopEnd);

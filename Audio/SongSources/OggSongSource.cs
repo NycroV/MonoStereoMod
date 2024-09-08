@@ -44,7 +44,7 @@ namespace MonoStereoMod.Audio.Reading
 
             OggReader = new(stream);
             Comments = OggReader.Comments.ComposeComments();
-            Comments.ParseLoop(out long loopStart, out long loopEnd);
+            Comments.ParseLoop(out long loopStart, out long loopEnd, WaveFormat.Channels);
 
             Provider = OggReader.Reformat(ref loopStart, ref loopEnd);
             LoopStart = loopStart;

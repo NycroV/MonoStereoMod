@@ -36,7 +36,7 @@ namespace MonoStereoMod.Audio
 
         public Dictionary<string, string> Comments { get; }
 
-        public long Length => CueReader.Length / CueReader.WaveFormat.BlockAlign;
+        public long Length => CueReader.Length / CueReader.WaveFormat.BlockAlign * CueReader.WaveFormat.Channels;
 
         public bool IsLooped { get; set; }
 
@@ -44,7 +44,10 @@ namespace MonoStereoMod.Audio
 
         public long LoopEnd { get; set; }
 
-        public long Position { get => CueReader.Position / CueReader.WaveFormat.BlockAlign; set => CueReader.Position = value * CueReader.WaveFormat.BlockAlign; }
+        public long Position {
+            get => CueReader.Position / CueReader.WaveFormat.BlockAlign * CueReader.WaveFormat.Channels;
+            set => CueReader.Position = value / WaveFormat.Channels * CueReader.WaveFormat.BlockAlign;
+        }
 
         public WaveFormat WaveFormat => CueReader.WaveFormat;
 
@@ -84,6 +87,7 @@ namespace MonoStereoMod.Audio
             Array.Copy(Cue.Buffer, Position, buffer, offset, samplesToCopy);
 
             Position += samplesToCopy;
+
             return samplesToCopy;
         }
 

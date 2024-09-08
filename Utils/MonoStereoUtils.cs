@@ -4,6 +4,7 @@ using MonoStereo.SampleProviders;
 using MonoStereoMod.Systems;
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
+using Newtonsoft.Json.Linq;
 using ReLogic.Content.Sources;
 using System;
 using System.Collections.Generic;
@@ -146,6 +147,12 @@ namespace MonoStereoMod.Utils
 
                 else
                     throw new ArgumentException("Song file must be in either mono or stereo!", nameof(provider));
+
+                if (loopStart > 0)
+                    loopStart *= provider.WaveFormat.Channels;
+
+                if (loopEnd > 0)
+                    loopEnd *= provider.WaveFormat.Channels;
             }
 
             return provider;
@@ -181,8 +188,6 @@ namespace MonoStereoMod.Utils
                 long samplesRemaining = count - samplesCopied;
 
                 int samplesToCopy = (int)Math.Min(samplesAvailable, samplesRemaining);
-                if (samplesToCopy % sampleProvider.WaveFormat.Channels != 0)
-                    samplesToCopy--;
 
                 if (samplesToCopy > 0)
                     samplesCopied += sampleProvider.Read(buffer, offset + samplesCopied, samplesToCopy);
@@ -196,6 +201,14 @@ namespace MonoStereoMod.Utils
             while (isLooped && samplesCopied < count);
 
             return samplesCopied;
+        }
+
+        public static float GetRealVolume(this float value)
+        {
+            float exponent = (value * 31f - 36.94f) * 0.05f;
+            float volume = MathF.Pow(10f, exponent);
+            float naturalEndFadeout = Terraria.Utils.GetLerpValue(0f, 0.074f, value, true);
+            return volume * naturalEndFadeout;
         }
 
         #endregion

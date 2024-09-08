@@ -42,7 +42,7 @@ namespace MonoStereoMod
         {
             Main.audioSystem = oldSystem;
 
-            foreach (MonoStereoAudioTrack track in instance.AudioTracks.Cast<MonoStereoAudioTrack>())
+            foreach (MonoStereoAudioTrack track in instance.AudioTracks.Where(s => s is MonoStereoAudioTrack).Cast<MonoStereoAudioTrack>())
                 track.Dispose();
 
             oldSystem = null;
@@ -93,8 +93,8 @@ namespace MonoStereoMod
 
         public void Update()
         {
-            AudioManager.MusicVolume = Main.musicVolume;
-            AudioManager.SoundEffectVolume = Main.soundVolume;
+            AudioManager.MusicVolume = Main.musicVolume.GetRealVolume();
+            AudioManager.SoundEffectVolume = Main.soundVolume.GetRealVolume();
 
             for (int i = 0; i < AudioTracks.Length; i++)
             {
@@ -150,8 +150,6 @@ namespace MonoStereoMod
 
         public void UpdateMisc()
         {
-            var state = AudioManager.MasterMixer.PlaybackState;
-
             if (Main.curMusic != Main.newMusic)
                 MusicReplayDelay = 0;
 

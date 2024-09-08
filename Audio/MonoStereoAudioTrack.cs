@@ -7,6 +7,7 @@ using NAudio.Wave;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Terraria;
 using Terraria.Audio;
 
 namespace MonoStereoMod
@@ -19,6 +20,7 @@ namespace MonoStereoMod
 
         public MonoStereoAudioTrack(ISongSource source) : base(source)
         {
+            IsLooped = true;
             Source = source;
             AddFilter(soundControl);
         }
@@ -92,10 +94,11 @@ namespace MonoStereoMod
             {
                 case "Volume":
                     {
-                        float exponent = (value * 31f - 36.94f) * 0.05f;
-                        float volume = MathF.Pow(10f, exponent);
-                        float naturalEndFadeout = Terraria.Utils.GetLerpValue(0f, 0.074f, value, true);
-                        Volume = volume * naturalEndFadeout;
+                        if (value == Main.musicVolume)
+                            break;
+
+                        value /= Main.musicVolume;
+                        Volume = value; // The vanilla curve is applied to the music mixer
                         break;
                     }
                 case "Pitch":
