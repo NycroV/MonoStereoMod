@@ -59,11 +59,7 @@ namespace MonoStereoMod
 
             system.UseSources(system.FileSources.InsertMonoStereoSource()); // This overrides the vanilla wave bank reader
             LoaderManager.Get<MusicLoader>().ResizeArrays(); // This ensures that all music tracks are reloaded to use MonoStereo sources
-
-            AudioManager.MasterMixer.AddFilter(filter);
         }
-
-        private readonly SpeedChangeFilter filter = new(1.5f);
 
         public override void Unload()
         {
