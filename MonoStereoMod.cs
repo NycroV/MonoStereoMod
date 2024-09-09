@@ -1,6 +1,7 @@
 global using static MonoStereoMod.Utils.MonoStereoUtils;
 using Microsoft.Xna.Framework;
 using MonoStereo;
+using MonoStereo.Filters;
 using MonoStereoMod.Detours;
 using ReLogic.Utilities;
 using System.IO;
@@ -46,6 +47,8 @@ namespace MonoStereoMod
 
             On_LegacyAudioSystem.Update += On_LegacyAudioSystem_Update;
             On_LegacyAudioSystem.FindReplacementTrack += On_LegacyAudioSystem_FindReplacementTrack;
+            On_LegacyAudioSystem.PauseAll += On_LegacyAudioSystem_PauseAll;
+            On_LegacyAudioSystem.ResumeAll += On_LegacyAudioSystem_ResumeAll;
 
             // These two projectile AIs reference the underlying SoundEffectInstance's of
             // the default vanilla engine. This modifies them to use our code instead.
@@ -56,7 +59,11 @@ namespace MonoStereoMod
 
             system.UseSources(system.FileSources.InsertMonoStereoSource()); // This overrides the vanilla wave bank reader
             LoaderManager.Get<MusicLoader>().ResizeArrays(); // This ensures that all music tracks are reloaded to use MonoStereo sources
+
+            AudioManager.MasterMixer.AddFilter(filter);
         }
+
+        private readonly SpeedChangeFilter filter = new(1.5f);
 
         public override void Unload()
         {

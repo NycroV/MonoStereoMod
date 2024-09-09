@@ -41,6 +41,11 @@ namespace MonoStereoMod.Systems
             // Only collects audio files that can be played, no other content type is included
             SetAssetNames(Cues.Keys.Select(cue => cue + ".xwb"));
             readers[0].Close();
+
+            // I have absolutely ZERO clue why, but tracks 1 and 3 seem to be swapped
+            // If anyone has any ideas or answers, please, for the love of God, fix this
+            (Cues[$"Music{Path.DirectorySeparatorChar}Music_1"], Cues[$"Music{Path.DirectorySeparatorChar}Music_3"]) =
+                (Cues[$"Music{Path.DirectorySeparatorChar}Music_3"], Cues[$"Music{Path.DirectorySeparatorChar}Music_1"]);
         }
 
         public override Stream OpenStream(string assetName) => new CueReader(Cues[assetName]);

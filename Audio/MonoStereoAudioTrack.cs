@@ -76,7 +76,7 @@ namespace MonoStereoMod
 
         public void Stop(AudioStopOptions options) => base.Stop();
 
-        public override int ReadSource(float[] buffer, int offset, int count) => base.ReadSource(buffer, offset, count);
+        public override int ReadSource(float[] buffer, int offset, int count) =>base.ReadSource(buffer, offset, count);
 
         public override void Pause()
         {

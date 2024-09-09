@@ -115,7 +115,7 @@ namespace MonoStereoMod.Utils
 
                 uint bitsPerSample = (format >> 31) & 0x1; // Yes, this is only 1 byte
                 uint blockAlign = (format >> 23) & 0xFF;  // 8 bytes
-                uint sampleRate = (format >> 5) & 0x7FFFF; // 18 bytes
+                uint sampleRate = /*(format >> 5) & 0x7FFFF; // 18 bytes*/ 44100; // For some reason, some vanilla tracks are 44,101 or 44,099. I don't know. They're all supposed to be 44.1 kHz.
                 uint channels = (format >> 2) & 0x7; // 3 bytes
                 uint tag = format & 0x3; // 2 bytes
 

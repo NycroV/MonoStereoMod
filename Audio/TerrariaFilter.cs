@@ -30,6 +30,9 @@ namespace MonoStereoMod
             }
             set
             {
+                if (_pitch == value)
+                    return;
+
                 _pitch = value;
                 _rate = (float)Math.Pow(2d, value);
                 resampler.SetRates(AudioStandards.SampleRate, AudioStandards.SampleRate / _rate);

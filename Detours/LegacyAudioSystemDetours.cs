@@ -59,5 +59,17 @@ namespace MonoStereoMod.Detours
 
             return null;
         }
+
+        public static void On_LegacyAudioSystem_PauseAll(On_LegacyAudioSystem.orig_PauseAll orig, LegacyAudioSystem self)
+        {
+            AudioManager.MasterMixer.Pause();
+            orig(self);
+        }
+
+        public static void On_LegacyAudioSystem_ResumeAll(On_LegacyAudioSystem.orig_ResumeAll orig, LegacyAudioSystem self)
+        {
+            AudioManager.MasterMixer.Resume();
+            orig(self);
+        }
     }
 }
