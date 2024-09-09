@@ -1,6 +1,8 @@
 ﻿using ATL;
 using MonoStereo;
 using MonoStereo.SampleProviders;
+using MonoStereoMod.Audio;
+using MonoStereoMod.Audio.Reading;
 using MonoStereoMod.Systems;
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
@@ -181,7 +183,7 @@ namespace MonoStereoMod.Utils
                 if (isLooped && loopEnd != -1)
                     endIndex = loopEnd;
 
-                long samplesAvailable = endIndex - seekSource.Position; // 798304 -> 798940
+                long samplesAvailable = endIndex - seekSource.Position;
                 long samplesRemaining = count - samplesCopied;
 
                 int samplesToCopy = (int)Math.Min(samplesAvailable, samplesRemaining);

@@ -1,1 +1,35 @@
+Configs: {
+	MonoStereoConfig: {
+		DisplayName: Mono Stereo Config
 
+		Headers: {
+			Latency: Latency Header
+			Output: Output Header
+		}
+
+		Latency: {
+			Label: Latency
+			Tooltip: ""
+		}
+
+		OutputDevice: {
+			Label: Output Device
+			Tooltip: ""
+		}
+
+		OutputDeviceName: {
+			Label: Output Device Name
+			Tooltip: ""
+		}
+
+		Getter: {
+			Label: Getter
+			Tooltip: ""
+		}
+
+		DeviceName: {
+			Label: Device Name
+			Tooltip: ""
+		}
+	}
+}

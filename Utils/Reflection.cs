@@ -10,6 +10,7 @@ using System.Reflection;
 using Terraria.Audio;
 using Terraria.ModLoader;
 using Terraria.ModLoader.Core;
+using Terraria.UI;
 using Terraria.Utilities;
 
 namespace MonoStereoMod.Utils
@@ -75,5 +76,11 @@ namespace MonoStereoMod.Utils
         private static readonly MethodInfo resizeArrays = typeof(ILoader).GetMethod("ResizeArrays", BindingFlags.NonPublic | BindingFlags.Instance);
 
         public static void ResizeArrays(this ILoader loader) => resizeArrays.Invoke(loader, null);
+
+        private static readonly Type uiFocusInputTextField = typeof(Terraria.ModLoader.UI.UICommon).Assembly.GetType("Terraria.ModLoader.UI.UIFocusInputTextField", true);
+
+        private static readonly FieldInfo currentString = uiFocusInputTextField.GetField("CurrentString", BindingFlags.Instance | BindingFlags.NonPublic);
+
+        public static void SetCurrentString(this UIElement element, string value) => currentString.SetValue(element, value);
     }
 }

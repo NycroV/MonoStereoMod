@@ -2,6 +2,7 @@ global using static MonoStereoMod.Utils.MonoStereoUtils;
 using Microsoft.Xna.Framework;
 using MonoStereo;
 using MonoStereo.Filters;
+using MonoStereoMod.Config;
 using MonoStereoMod.Detours;
 using ReLogic.Utilities;
 using System.IO;
@@ -29,7 +30,9 @@ namespace MonoStereoMod
             if (Main.audioSystem is not LegacyAudioSystem system)
                 return;
 
-            AudioManager.Initialize(() => !ModRunning || Main.instance is null, 150);
+            AudioManager.Initialize(() => !ModRunning || Main.instance is null,
+                latency: MonoStereoConfig.LatencyConfig,
+                deviceNumber: MonoStereoConfig.DeviceNumberConfig);
 
             On_ActiveSound.Play += On_ActiveSound_Play;
             On_ActiveSound.Stop += On_ActiveSound_Stop;

@@ -61,7 +61,7 @@ namespace MonoStereoMod.Detours
                     item.Value.Update();
                     var soundEffect = SoundCache.Get(item.Value);
 
-                    if (soundEffect is not null && !soundEffect.IsPlaying)
+                    if (soundEffect is null)
                         trackedSounds.Remove(item.Id);
                 }
                 catch

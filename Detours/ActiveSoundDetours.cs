@@ -21,6 +21,7 @@ namespace MonoStereoMod.Detours
             self.Pitch = soundEffectInstance.Pitch;
 
             soundEffectInstance.IsLooped = self.Style.IsLooped;
+
             soundEffectInstance.Play();
 
             SoundCache.Set(self, soundEffectInstance);
