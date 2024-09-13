@@ -14,6 +14,13 @@ namespace MonoStereoMod
 {
     public class MonoStereoMod : Mod
     {
+        public static class Config
+        {
+            public static int Latency { get; internal set; } = 150;
+            public static int DeviceNumber { get; internal set; } = -1;
+            public static string DeviceDisplayName { get => AudioManager.GetCapabilities(DeviceNumber).ProductName; }
+        }
+
         public static bool ModRunning { get; set; } = false;
 
         public static MonoStereoMod Instance { get; private set; } = null;
@@ -29,8 +36,8 @@ namespace MonoStereoMod
                 return;
 
             AudioManager.Initialize(() => !ModRunning || Main.instance is null,
-                latency: MonoStereoConfig.LatencyConfig,
-                deviceNumber: MonoStereoConfig.DeviceNumberConfig);
+                latency: Config.Latency,
+                deviceNumber: Config.DeviceNumber);
 
             On_ActiveSound.Play += On_ActiveSound_Play;
             On_ActiveSound.Stop += On_ActiveSound_Stop;
