@@ -6,7 +6,7 @@ using Terraria.ModLoader.Config;
 
 namespace MonoStereoMod.Config
 {
-    public class MonoStereoConfig : ModConfig
+    internal class MonoStereoConfig : ModConfig
     {
         [JsonIgnore] private int latency = MonoStereoMod.Config.Latency;
         [JsonIgnore] private int outputDevice = MonoStereoMod.Config.DeviceNumber;
