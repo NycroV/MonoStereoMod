@@ -11,7 +11,7 @@ namespace MonoStereoMod.Config
 
         protected override void DrawSelf(SpriteBatch spriteBatch)
         {
-            string displayString = MonoStereoConfig.DeviceDisplayName;
+            string displayString = MonoStereoMod.Config.DeviceDisplayName;
 
             if (displayString == "Microsoft Sound Mapper")
                 displayString = Language.GetTextValue("Mods.MonoStereoMod.Configs.MonoStereoConfig.DeviceDefault");

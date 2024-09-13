@@ -8,12 +8,8 @@ namespace MonoStereoMod.Config
 {
     public class MonoStereoConfig : ModConfig
     {
-        [JsonIgnore] public static int LatencyConfig { get; private set; } = 150;
-        [JsonIgnore] public static int DeviceNumberConfig { get; private set; } = -1;
-        [JsonIgnore] public static string DeviceDisplayName { get => AudioManager.GetCapabilities(DeviceNumberConfig).ProductName; }
-
-        [JsonIgnore] private int latency = LatencyConfig;
-        [JsonIgnore] private int outputDevice = DeviceNumberConfig;
+        [JsonIgnore] private int latency = MonoStereoMod.Config.Latency;
+        [JsonIgnore] private int outputDevice = MonoStereoMod.Config.DeviceNumber;
 
         public override ConfigScope Mode => ConfigScope.ClientSide;
 
@@ -28,10 +24,10 @@ namespace MonoStereoMod.Config
             {
                 latency = value;
 
-                if (LatencyConfig != latency && MonoStereoMod.ModRunning)
+                if (MonoStereoMod.Config.Latency != latency && MonoStereoMod.ModRunning)
                 {
                     AudioManager.ResetOutput(latency);
-                    LatencyConfig = latency;
+                    MonoStereoMod.Config.Latency = latency;
                 }
             }
         }
@@ -53,22 +49,22 @@ namespace MonoStereoMod.Config
                 else
                     outputDevice = value;
 
-                if (DeviceNumberConfig != outputDevice && MonoStereoMod.ModRunning)
+                if (MonoStereoMod.Config.DeviceNumber != outputDevice && MonoStereoMod.ModRunning)
                 {
-                    AudioManager.ResetOutput(LatencyConfig, outputDevice);
-                    DeviceNumberConfig = outputDevice;
+                    AudioManager.ResetOutput(MonoStereoMod.Config.Latency, outputDevice);
+                    MonoStereoMod.Config.DeviceNumber = outputDevice;
                 }
             }
         }
 
         [JsonIgnore]
         [CustomModConfigItem(typeof(CustomStringElement))]
-        public string DeviceName; // Display value is calculated per-frame in the UI code
+        public string DeviceName => MonoStereoMod.Config.DeviceDisplayName; // Display value is calculated per-frame in the UI code
 
         public override void OnChanged()
         {
-            LatencyConfig = Latency;
-            DeviceNumberConfig = OutputDevice;
+            MonoStereoMod.Config.Latency = Latency;
+            MonoStereoMod.Config.DeviceNumber = OutputDevice;
         }
     }
 }
