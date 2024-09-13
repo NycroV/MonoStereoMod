@@ -2,7 +2,6 @@ global using static MonoStereoMod.Utils.MonoStereoUtils;
 using static MonoStereoMod.Detours.Detours;
 using Microsoft.Xna.Framework;
 using MonoStereo;
-using MonoStereoMod.Config;
 using ReLogic.Utilities;
 using System.IO;
 using System.Linq;
