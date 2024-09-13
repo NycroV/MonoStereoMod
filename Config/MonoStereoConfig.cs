@@ -1,21 +1,19 @@
 ﻿using MonoStereo;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
-using System.Text;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
-using Terraria;
 using Terraria.ModLoader.Config;
 
 namespace MonoStereoMod.Config
 {
-    internal class MonoStereoConfig : ModConfig
+    public class MonoStereoConfig : ModConfig
     {
-        public static int LatencyConfig = 150;
+        [JsonIgnore] public static int LatencyConfig { get; private set; } = 150;
+        [JsonIgnore] public static int DeviceNumberConfig { get; private set; } = -1;
+        [JsonIgnore] public static string DeviceDisplayName { get => AudioManager.GetCapabilities(DeviceNumberConfig).ProductName; }
 
-        public static int DeviceNumberConfig = -1;
+        [JsonIgnore] private int latency = LatencyConfig;
+        [JsonIgnore] private int outputDevice = DeviceNumberConfig;
 
         public override ConfigScope Mode => ConfigScope.ClientSide;
 
@@ -58,41 +56,19 @@ namespace MonoStereoMod.Config
                 if (DeviceNumberConfig != outputDevice && MonoStereoMod.ModRunning)
                 {
                     AudioManager.ResetOutput(LatencyConfig, outputDevice);
-                    UpdateDeviceDisplayName();
                     DeviceNumberConfig = outputDevice;
                 }
             }
         }
 
-        private int latency = LatencyConfig;
-        private int outputDevice = DeviceNumberConfig;
-
         [JsonIgnore]
-        public string DeviceName => AudioManager.GetCapabilities(outputDevice).ProductName;
+        [CustomModConfigItem(typeof(CustomStringElement))]
+        public string DeviceName; // Display value is calculated per-frame in the UI code
 
         public override void OnChanged()
         {
             LatencyConfig = Latency;
             DeviceNumberConfig = OutputDevice;
-        }
-
-        private void UpdateDeviceDisplayName()
-        {
-            // I know this is scuffed, but for some reason UI strings do not
-            // update automatically. Here we just navigate through the UI to the correct
-            // element and manually re-assign the name.
-            //
-            // This hasn't caused any issues for me so far, but if it begins to I will
-            // use more dynamic search funtions.
-            Main.MenuUI.CurrentState.Children.First()
-                .Children.ElementAt(5)
-                .Children.First()
-                .Children.First()
-                .Children.Last()
-                .Children.First()
-                .Children.First()
-                .Children.First()
-                .SetCurrentString(DeviceName);
         }
     }
 }

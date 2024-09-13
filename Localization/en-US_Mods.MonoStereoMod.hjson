@@ -1,35 +1,30 @@
 Configs: {
 	MonoStereoConfig: {
 		DisplayName: Mono Stereo Config
+		DeviceDefault: Default
 
 		Headers: {
-			Latency: Latency Header
-			Output: Output Header
+			Latency: Latency
+			Output: Output
 		}
 
 		Latency: {
-			Label: Latency
-			Tooltip: ""
+			Label: Audio Latency
+			Tooltip:
+				'''
+				The time, in milliseconds, before audio reaches the output device.
+				Increasing this value can create a slight delay in audio playback, but will help if audio is stuttering or lagging.
+				'''
 		}
 
 		OutputDevice: {
 			Label: Output Device
-			Tooltip: ""
-		}
-
-		OutputDeviceName: {
-			Label: Output Device Name
-			Tooltip: ""
-		}
-
-		Getter: {
-			Label: Getter
-			Tooltip: ""
+			Tooltip: The selected output device index.
 		}
 
 		DeviceName: {
-			Label: Device Name
-			Tooltip: ""
+			Label: Output Device Name
+			Tooltip: The name of the selected output device.
 		}
 	}
 }
