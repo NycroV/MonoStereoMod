@@ -1,6 +1,6 @@
 Configs: {
 	MonoStereoConfig: {
-		DisplayName: Mono Stereo Config
+		DisplayName: MonoStereo Config
 		DeviceDefault: Default
 
 		Headers: {
