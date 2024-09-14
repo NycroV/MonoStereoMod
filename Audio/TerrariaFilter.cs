@@ -9,13 +9,12 @@ namespace MonoStereoMod
     {
         public TerrariaFilter(float pitch = 0f, float pan = 0f)
         {
-            PitchFactor = pitch;
-            Panning = pan;
-
             resampler.SetMode(true, 2, false);
             resampler.SetFilterParms();
             resampler.SetFeedMode(false); // output driven
-            resampler.SetRates(AudioStandards.SampleRate, AudioStandards.SampleRate / _rate);
+
+            PitchFactor = pitch;
+            Panning = pan;
         }
 
         public override FilterPriority Priority => FilterPriority.ApplyFirst;
@@ -39,8 +38,9 @@ namespace MonoStereoMod
             }
         }
 
-        private float _pitch;
-        private float _rate;
+        // Init to NaN to force resample prep
+        private float _pitch = float.NaN;
+        private float _rate = float.NaN;
 
         public override void PostProcess(float[] buffer, int offset, int samplesRead)
         {
@@ -50,7 +50,7 @@ namespace MonoStereoMod
 
         public override int ModifyRead(float[] buffer, int offset, int count)
         {
-            if (_pitch != 1f)
+            if (_pitch != 0f)
             {
                 int framesRequested = count / AudioStandards.ChannelCount;
                 int inNeeded = resampler.ResamplePrepare(framesRequested, AudioStandards.ChannelCount, out float[] inBuffer, out int inBufferOffset);

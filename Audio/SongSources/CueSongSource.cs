@@ -7,7 +7,7 @@ using System.Collections.Generic;
 
 namespace MonoStereoMod.Audio
 {
-    internal class CueSongSource : ISongSource
+    internal class CueSongSource : ITerrariaSongSource
     {
         public CueSongSource(CueReader cue)
         {
@@ -49,7 +49,7 @@ namespace MonoStereoMod.Audio
 
         public long Position {
             get => CueReader.Position / CueReader.WaveFormat.BlockAlign * CueReader.WaveFormat.Channels;
-            set => CueReader.Position = value / WaveFormat.Channels * CueReader.WaveFormat.BlockAlign;
+            set => CueReader.Position = value / CueReader.WaveFormat.Channels * CueReader.WaveFormat.BlockAlign;
         }
 
         public WaveFormat WaveFormat => Source.WaveFormat;

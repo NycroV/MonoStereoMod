@@ -14,7 +14,7 @@ namespace MonoStereoMod
 {
     public class MonoStereoAudioTrack : Song, IAudioTrack
     {
-        public ISongSource Source { get; }
+        public ISongSource Source { get; private set; }
 
         private readonly TerrariaFilter soundControl = new();
 

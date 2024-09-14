@@ -7,7 +7,7 @@ using System.IO;
 
 namespace MonoStereoMod.Audio.Reading
 {
-    internal class OggSongSource : ISongSource
+    internal class OggSongSource : ITerrariaSongSource
     {
         public string FileName { get; private set; }
 

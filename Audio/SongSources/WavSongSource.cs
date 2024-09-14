@@ -7,7 +7,7 @@ using System.IO;
 
 namespace MonoStereoMod.Audio.Reading
 {
-    internal class WavSongSource : ISongSource
+    internal class WavSongSource : ITerrariaSongSource
     {
         public WavSongSource(Stream stream, string fileName)
         {
