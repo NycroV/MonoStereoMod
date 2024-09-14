@@ -28,3 +28,10 @@ Configs: {
 		}
 	}
 }
+
+Items: {
+	DebugItem: {
+		DisplayName: Debug Item
+		Tooltip: ""
+	}
+}

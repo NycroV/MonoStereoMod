@@ -12,20 +12,20 @@ using Terraria.Audio;
 
 namespace MonoStereoMod
 {
-    public class MonoStereoAudioTrack : Song, IAudioTrack
+    public class MonoStereoAudioTrack : Song, ILoopableSampleProvider, IAudioTrack
     {
-        public ISongSource Source { get; }
+        public ILoopableSongSource LoopedSource { get; }
 
         private readonly TerrariaFilter soundControl = new();
 
-        public MonoStereoAudioTrack(ISongSource source) : base(source)
+        public MonoStereoAudioTrack(ILoopableSongSource source) : base(source)
         {
+            LoopedSource = source;
             IsLooped = true;
-            Source = source;
             AddFilter(soundControl);
         }
 
-        public new IEnumerable<AudioFilter> Filters
+        public override IEnumerable<AudioFilter> Filters
         {
             get
             {
@@ -52,6 +52,16 @@ namespace MonoStereoMod
 
         public bool IsPaused => !IsDisposed && PlaybackState == PlaybackState.Paused;
 
+        public bool IsLooped
+        {
+            get => LoopedSource.IsLooped;
+            set => LoopedSource.IsLooped = value;
+        }
+
+        public long LoopStart => LoopedSource.LoopStart;
+
+        public long LoopEnd => LoopedSource.LoopEnd;
+
         public override WaveFormat WaveFormat => Source.WaveFormat;
 
         public override PlaybackState PlaybackState { get => Source.PlaybackState; set => Source.PlaybackState = value; }
@@ -76,7 +86,7 @@ namespace MonoStereoMod
 
         public void Stop(AudioStopOptions options) => base.Stop();
 
-        public override int ReadSource(float[] buffer, int offset, int count) =>base.ReadSource(buffer, offset, count);
+        public override int ReadSource(float[] buffer, int offset, int count) => base.ReadSource(buffer, offset, count);
 
         public override void Pause()
         {
@@ -85,6 +95,7 @@ namespace MonoStereoMod
 
         public void Reuse()
         {
+            ClearFilters();
             Source.Position = 0;
         }
 
