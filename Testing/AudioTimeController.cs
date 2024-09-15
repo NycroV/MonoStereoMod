@@ -7,7 +7,7 @@ namespace MonoStereoMod.Testing
 {
     public class AudioTimeController
     {
-        private readonly TempoChangeFilter tempo = new();
+        private readonly SpeedChangeFilter speedFilter = new();
         private readonly ReverseFilter reverseFilter = new();
         private float timeSpeed = 1f;
 
@@ -22,7 +22,7 @@ namespace MonoStereoMod.Testing
                 if (value != 0f)
                     reverseFilter.Reversing = value < 0f;
 
-                tempo.Tempo = Math.Abs(value);
+                speedFilter.Speed = Math.Abs(value);
                 timeSpeed = value;
             }
         }
@@ -32,7 +32,7 @@ namespace MonoStereoMod.Testing
             if (provider.Filters.Contains(reverseFilter))
                 return;
 
-            provider.AddFilter(tempo);
+            provider.AddFilter(speedFilter);
             provider.AddFilter(reverseFilter);
         }
 
@@ -40,7 +40,7 @@ namespace MonoStereoMod.Testing
         {
             while (provider.Filters.Contains(reverseFilter))
             {
-                provider.RemoveFilter(tempo);
+                provider.RemoveFilter(speedFilter);
                 provider.RemoveFilter(reverseFilter);
             }
         }
