@@ -145,8 +145,10 @@ namespace MonoStereoMod.Testing
 
             // Add all of the samples that we just read to the "recording"
             var sampleQueue = recording.Buffer;
+            float volume = Source.Volume;
+
             for (int i = 0; i < samplesRead; i++)
-                sampleQueue.Enqueue(buffer[offset++]);
+                sampleQueue.Enqueue(buffer[offset++] / volume);
         }
 
         public override int ModifyRead(float[] buffer, int offset, int count)
@@ -166,6 +168,7 @@ namespace MonoStereoMod.Testing
             // The sampleQueue is literally a queue of float samples
             var sampleQueue = recording.Buffer;
             int samplesRead = 0;
+            float volume = Source.Volume;
 
             lock (sampleQueue)
             {
@@ -176,7 +179,7 @@ namespace MonoStereoMod.Testing
                 {
                     if (sampleQueue.TryDequeue(out float sample))
                     {
-                        buffer[offset++] = sample;
+                        buffer[offset++] = sample * volume;
                         samplesRead++;
                     }
 
