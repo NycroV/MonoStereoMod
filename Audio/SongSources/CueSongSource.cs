@@ -7,7 +7,7 @@ using System.Collections.Generic;
 
 namespace MonoStereoMod.Audio
 {
-    internal class CueSongSource : ILoopableSongSource
+    internal class CueSongSource : ITerrariaSongSource
     {
         public CueSongSource(CueReader cue)
         {

@@ -1,4 +1,5 @@
-﻿using MonoStereo.AudioSources;
+﻿using Microsoft.Xna.Framework.Media;
+using MonoStereo.AudioSources;
 using MonoStereo.Filters;
 using MonoStereo.SampleProviders;
 using NAudio.Utils;
@@ -168,7 +169,7 @@ namespace MonoStereoMod.Testing
                 //
                 // Alternatively, you can make this method return simply `samplesRead` instead of doing default reading.
                 // Be careful though - if samplesRead is 0, this will mark this source as ready for garbage collection.
-                if (Source is not ILoopableSampleProvider source)
+                if (Source is not MonoStereoAudioTrack track || track.Source is not ITerrariaSongSource source)
                 {
                     Reversing = false;
                     return samplesRead + base.ModifyRead(buffer, offset, samplesRemaining);

@@ -38,9 +38,9 @@ namespace MonoStereoMod
             }
         }
 
-        // Assign NaN first to force rate setting
+        // Init to NaN to force resample prep
         private float _pitch = float.NaN;
-        private float _rate;
+        private float _rate = float.NaN;
 
         public override void PostProcess(float[] buffer, int offset, int samplesRead)
         {
@@ -50,7 +50,7 @@ namespace MonoStereoMod
 
         public override int ModifyRead(float[] buffer, int offset, int count)
         {
-            if (_pitch != 1f)
+            if (_pitch != 0f)
             {
                 int framesRequested = count / AudioStandards.ChannelCount;
                 int inNeeded = resampler.ResamplePrepare(framesRequested, AudioStandards.ChannelCount, out float[] inBuffer, out int inBufferOffset);

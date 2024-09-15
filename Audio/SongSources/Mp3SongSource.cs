@@ -7,7 +7,7 @@ using System.IO;
 
 namespace MonoStereoMod.Audio.Reading
 {
-    internal class Mp3SongSource : ILoopableSongSource
+    internal class Mp3SongSource : ITerrariaSongSource
     {
         internal readonly Mp3FileReader reader;
 
