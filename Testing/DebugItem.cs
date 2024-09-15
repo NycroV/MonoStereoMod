@@ -25,17 +25,13 @@ namespace MonoStereoMod.Testing
             Item.rare = ItemRarityID.Blue;
         }
 
-        private static readonly ReverseFilter filter = new();
-
         public override bool? UseItem(Player player)
         {
-            var currentTrack = MonoStereoMod.GetSong(Main.curMusic);
-
             if (player.altFunctionUse == 2)
-                currentTrack.AddFilter(filter);
+                DebugPlayer.Apply();
 
             else
-                filter.Reversing = !filter.Reversing;
+                player.GetModPlayer<DebugPlayer>().slowingDown = true;
 
             return true;
         }
@@ -43,7 +39,7 @@ namespace MonoStereoMod.Testing
         public override bool AltFunctionUse(Player player)
         {
             var currentTrack = MonoStereoMod.GetSong(Main.curMusic);
-            return currentTrack is not null && !currentTrack.Filters.Contains(filter);
+            return currentTrack is not null && !DebugPlayer.timeController.IsAppliedTo(currentTrack);
         }
     }
 }
