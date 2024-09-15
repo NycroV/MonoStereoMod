@@ -36,7 +36,7 @@ namespace MonoStereoMod.Detours
 
                 try
                 {
-                    ILoopableSongSource source = extension switch
+                    ISongSource source = extension switch
                     {
                         ".ogg" => new OggSongSource(contentSource.OpenStream(assetPathWithExtension), assetPathWithExtension),
                         ".wav" => new WavSongSource(contentSource.OpenStream(assetPathWithExtension), assetPathWithExtension),
@@ -46,7 +46,7 @@ namespace MonoStereoMod.Detours
                     };
 
                     if (source != null)
-                        return new MonoStereoAudioTrack(new LoopableBufferedSongReader(source, 2f));
+                        return new MonoStereoAudioTrack(new BufferedSongReader(source, 2f));
                 }
                 catch
                 {

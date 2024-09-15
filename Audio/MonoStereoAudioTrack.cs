@@ -12,15 +12,12 @@ using Terraria.Audio;
 
 namespace MonoStereoMod
 {
-    public class MonoStereoAudioTrack : Song, ILoopableSampleProvider, IAudioTrack
+    public class MonoStereoAudioTrack : Song, IAudioTrack
     {
-        public ISongSource Source { get; private set; }
-
         private readonly TerrariaFilter soundControl = new();
 
-        public MonoStereoAudioTrack(ILoopableSongSource source) : base(source)
+        public MonoStereoAudioTrack(ISongSource source) : base(source)
         {
-            LoopedSource = source;
             IsLooped = true;
             AddFilter(soundControl);
         }
@@ -51,16 +48,6 @@ namespace MonoStereoMod
         public bool IsStopped => IsDisposed || PlaybackState == PlaybackState.Stopped;
 
         public bool IsPaused => !IsDisposed && PlaybackState == PlaybackState.Paused;
-
-        public bool IsLooped
-        {
-            get => LoopedSource.IsLooped;
-            set => LoopedSource.IsLooped = value;
-        }
-
-        public long LoopStart => LoopedSource.LoopStart;
-
-        public long LoopEnd => LoopedSource.LoopEnd;
 
         public override WaveFormat WaveFormat => Source.WaveFormat;
 

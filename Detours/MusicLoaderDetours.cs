@@ -26,7 +26,7 @@ namespace MonoStereoMod.Detours
 
             Stream stream = ModContent.OpenRead(path, true);
 
-            ILoopableSongSource source = extension switch
+            ISongSource source = extension switch
             {
                 ".wav" => new WavSongSource(stream, fileName),
                 ".mp3" => new Mp3SongSource(stream, fileName),
@@ -34,7 +34,7 @@ namespace MonoStereoMod.Detours
                 _ => throw new FileLoadException($"Unknown music extension {extension}"),
             };
 
-            return new MonoStereoAudioTrack(new LoopableBufferedSongReader(source, 2f));
+            return new MonoStereoAudioTrack(new BufferedSongReader(source, 2f));
         }
     }
 }
