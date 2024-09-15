@@ -47,7 +47,8 @@ namespace MonoStereoMod.Audio
 
         public long LoopEnd { get; set; }
 
-        public long Position {
+        public long Position
+        {
             get => CueReader.Position / CueReader.WaveFormat.BlockAlign * CueReader.WaveFormat.Channels;
             set => CueReader.Position = value / CueReader.WaveFormat.Channels * CueReader.WaveFormat.BlockAlign;
         }

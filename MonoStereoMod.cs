@@ -1,5 +1,4 @@
 global using static MonoStereoMod.Utils.MonoStereoUtils;
-using static MonoStereoMod.Detours.Detours;
 using Microsoft.Xna.Framework;
 using MonoStereo;
 using ReLogic.Utilities;
@@ -8,6 +7,7 @@ using System.Linq;
 using Terraria;
 using Terraria.Audio;
 using Terraria.ModLoader;
+using static MonoStereoMod.Detours.Detours;
 
 namespace MonoStereoMod
 {

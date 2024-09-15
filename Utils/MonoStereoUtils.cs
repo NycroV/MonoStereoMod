@@ -1,8 +1,6 @@
 ﻿using ATL;
 using MonoStereo;
 using MonoStereo.SampleProviders;
-using MonoStereoMod.Audio;
-using MonoStereoMod.Audio.Reading;
 using MonoStereoMod.Systems;
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;

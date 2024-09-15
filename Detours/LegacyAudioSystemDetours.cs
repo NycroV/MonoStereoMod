@@ -1,12 +1,10 @@
 ﻿using MonoStereo;
-using MonoStereo.AudioSources.Songs;
 using MonoStereo.AudioSources;
-using MonoStereoMod.Audio.Reading;
+using MonoStereo.AudioSources.Songs;
 using MonoStereoMod.Audio;
-using MonoStereoMod.Systems;
+using MonoStereoMod.Audio.Reading;
 using ReLogic.Content.Sources;
 using System.Collections.Generic;
-using System.Linq;
 using Terraria;
 using Terraria.Audio;
 

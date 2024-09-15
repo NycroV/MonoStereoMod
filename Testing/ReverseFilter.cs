@@ -41,7 +41,7 @@ namespace MonoStereoMod.Testing
                     kvp.Value.Reversing = value;
 
                     // Seek to the current position, accounting for how many samples are recorded
-                    kvp.Key.Position = kvp.Value.RecordingStart + kvp.Value.Buffer.Count; 
+                    kvp.Key.Position = kvp.Value.RecordingStart + kvp.Value.Buffer.Count;
                 }
 
                 reversing = value;
