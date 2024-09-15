@@ -8,8 +8,10 @@ using System.Linq;
 
 namespace MonoStereoMod
 {
-    public class MonoStereoSoundEffect : SoundEffect
+    public class MonoStereoSoundEffect : SoundEffect, ILoopableSampleProvider
     {
+        public ILoopableSoundEffectSource LoopedSource { get; }
+
         public new IEnumerable<AudioFilter> Filters
         {
             get
@@ -37,10 +39,21 @@ namespace MonoStereoMod
 
         public bool IsStopped => IsDisposed || PlaybackState == NAudio.Wave.PlaybackState.Stopped;
 
+        public bool IsLooped
+        {
+            get => LoopedSource.IsLooped;
+            set => LoopedSource.IsLooped = value;
+        }
+
+        public long LoopStart => LoopedSource.LoopStart;
+
+        public long LoopEnd => LoopedSource.LoopEnd;
+
         private readonly TerrariaFilter soundControl = new();
 
-        public MonoStereoSoundEffect(ISoundEffectSource source) : base(source)
+        public MonoStereoSoundEffect(ILoopableSoundEffectSource source) : base(source)
         {
+            LoopedSource = source;
             AddFilter(soundControl);
         }
 

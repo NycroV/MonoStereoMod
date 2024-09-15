@@ -41,7 +41,11 @@ namespace MonoStereoMod.Audio.Reading
 
         public long LoopEnd { get; set; }
 
-        public long Position { get => reader.Position / reader.WaveFormat.BlockAlign * provider.WaveFormat.Channels; set => reader.Position = value / provider.WaveFormat.Channels * reader.WaveFormat.BlockAlign; }
+        public long Position
+        {
+            get => reader.Position / reader.WaveFormat.BlockAlign * provider.WaveFormat.Channels;
+            set => reader.Position = value / provider.WaveFormat.Channels * reader.WaveFormat.BlockAlign;
+        }
 
         public WaveFormat WaveFormat => provider.WaveFormat;
 
