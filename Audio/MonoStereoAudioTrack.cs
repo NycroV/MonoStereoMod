@@ -42,19 +42,20 @@ namespace MonoStereoMod
             get => soundControl.Panning;
             set => soundControl.Panning = value;
         }
+        
+        // Volume exists as a property of Song
 
         public bool IsPlaying => !IsDisposed && PlaybackState == PlaybackState.Playing;
 
-        public bool IsStopped => IsDisposed || PlaybackState == PlaybackState.Stopped;
-
         public bool IsPaused => !IsDisposed && PlaybackState == PlaybackState.Paused;
+
+        public bool IsStopped => IsDisposed || PlaybackState == PlaybackState.Stopped;
 
         public override WaveFormat WaveFormat => Source.WaveFormat;
 
-        public override PlaybackState PlaybackState { get => Source.PlaybackState; set => Source.PlaybackState = value; }
-
         public bool IsDisposed { get; private set; } = false;
 
+        // This ensures the track is only disposed if we actually want to dispose it.
         public override void Close()
         {
             if (IsDisposed)
@@ -64,27 +65,21 @@ namespace MonoStereoMod
                 AudioManager.RemoveSongInput(this);
         }
 
-        public new void Dispose()
+        public override void Dispose()
         {
             IsDisposed = true;
             base.Dispose();
-            GC.SuppressFinalize(this);
         }
 
-        public void Stop(AudioStopOptions options) => base.Stop();
+        public void Stop(AudioStopOptions options) => Stop();
 
-        public override int ReadSource(float[] buffer, int offset, int count) => base.ReadSource(buffer, offset, count);
-
-        public override void Pause()
+        public override void Stop()
         {
-            base.Pause();
-        }
-
-        public void Reuse()
-        {
+            base.Stop();
             ClearFilters();
-            Source.Position = 0;
         }
+
+        public void Reuse() => Source.Position = 0L;
 
         public void SetVariable(string variableName, float value)
         {

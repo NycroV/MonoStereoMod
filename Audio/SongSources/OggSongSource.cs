@@ -50,6 +50,14 @@ namespace MonoStereoMod.Audio.Reading
             Provider = OggReader.Reformat(ref loopStart, ref loopEnd);
             LoopStart = loopStart;
             LoopEnd = loopEnd;
+
+            // We read and then seek to 0 as a sort of way to "initialize" the stream
+            // Ogg encoding can get funky when you try to seek before any reading occurs
+            
+            // Exactly `Latency` milliseconds of samples
+            int sampleCount = AudioStandards.SampleRate / 1000 * MonoStereoMod.Config.Latency * AudioStandards.ChannelCount;
+            Provider.Read(new float[sampleCount], 0, sampleCount);
+            Position = 0;
         }
 
         public int Read(float[] buffer, int offset, int count) => Provider.LoopedRead(buffer, offset, count, this, IsLooped, Length, LoopStart, LoopEnd);
