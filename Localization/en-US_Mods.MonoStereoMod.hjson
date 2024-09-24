@@ -4,7 +4,7 @@ Configs: {
 		DeviceDefault: Default
 
 		Headers: {
-			Latency: Latency
+			Playback: Playback
 			Output: Output
 		}
 
@@ -14,6 +14,16 @@ Configs: {
 				'''
 				The time, in milliseconds, before audio reaches the output device.
 				Increasing this value can create a slight delay in audio playback, but will help if audio is stuttering or lagging.
+				'''
+		}
+
+		BufferCount: {
+			Label: Buffer Count
+			Tooltip:
+				'''
+				The number of buffers to split playbac queuing among.
+				Increasing this value can make room for lower latency, but can cause distortion with certain effects.
+				It is recommended to keep this value between 4-10.
 				'''
 		}
 

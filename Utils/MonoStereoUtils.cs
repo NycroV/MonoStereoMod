@@ -22,59 +22,7 @@ namespace MonoStereoMod.Utils
 
         public static void RunOnMainThreadAndWait(Action action) => Main.RunOnMainThread(action).GetAwaiter().GetResult();
 
-        public static CachedSoundEffect GetRandomSoundEffect(this SoundStyle style)
-        {
-            var variants = style.Variants();
-
-            if (variants == null || variants.Length == 0)
-            {
-                return SoundCache.Cache(style.SoundPath);
-            }
-            else
-            {
-                int variantIndex = style.GetRandomVariantIndex();
-                int variant = variants[variantIndex];
-
-                return SoundCache.Cache(style.SoundPath + variant);
-            }
-        }
-
-        public static int GetRandomVariantIndex(this SoundStyle style)
-        {
-            var variants = style.Variants();
-            var variantsWeights = style.VariantsWeights();
-
-            if (variantsWeights == null)
-            {
-                // Simple random.
-                return SoundStyleRandom.Next(variants!.Length);
-            }
-
-            // Weighted random.
-            var totalVariantWeight = style.TotalVariantWeight();
-            if (totalVariantWeight is null)
-            {
-                totalVariantWeight = variantsWeights.Sum();
-                style.SetTotalVariantWeight(totalVariantWeight.Value);
-            }
-
-            float random = (float)SoundStyleRandom.NextDouble() * totalVariantWeight.Value;
-            float accumulatedWeight = 0f;
-
-            for (int i = 0; i < variantsWeights.Length; i++)
-            {
-                accumulatedWeight += variantsWeights[i];
-
-                if (random < accumulatedWeight)
-                {
-                    return i;
-                }
-            }
-
-            return 0; // Unreachable.
-        }
-
-        private static readonly char[] nameSplitters = new char[] { '/', ' ', ':' };
+        private static readonly char[] nameSplitters = ['/', ' ', ':'];
         public static void SplitName(string name, out string domain, out string subName)
         {
             int slash = name.IndexOfAny(nameSplitters); // slash is the canonical splitter, but we'll accept space and colon for backwards compatibility, just in case

@@ -11,15 +11,13 @@ namespace MonoStereoMod.Detours
 {
     internal static partial class Detours
     {
-        public static Hook LoadMusicHook;
+        public static Hook MusicLoader_LoadMusic_Hook;
 
-        public static MethodInfo LoadMusicMethod = typeof(MusicLoader).GetMethod("LoadMusic", BindingFlags.NonPublic | BindingFlags.Static);
+        public static MethodInfo MusicLoader_LoadMusic_Method = typeof(MusicLoader).GetMethod("LoadMusic", BindingFlags.NonPublic | BindingFlags.Static);
 
-        public delegate IAudioTrack LoadMusicOrigDelegate(string path, string extension);
+        public delegate IAudioTrack MusicLoader_LoadMusic_OrigDelegate(string path, string extension);
 
-        public delegate IAudioTrack LoadMusicDetourDelegate(LoadMusicOrigDelegate orig, string path, string extension);
-
-        public static IAudioTrack On_MusicLoader_LoadMusic(LoadMusicOrigDelegate orig, string path, string extension)
+        public static IAudioTrack On_MusicLoader_LoadMusic(MusicLoader_LoadMusic_OrigDelegate orig, string path, string extension)
         {
             string fileName = path + extension;
             path = $"tmod:{path}{extension}";

@@ -1,69 +1,81 @@
 ﻿using MonoStereo;
-using MonoStereo.AudioSources.Sounds;
-using MonoStereoMod.Systems;
-using ReLogic.Content;
 using System.Collections.Generic;
+using Xna = Microsoft.Xna.Framework.Audio;
+using MonoStereoMod.Systems.VanillaReaders;
 using System.Linq;
-using Terraria;
-using Terraria.Audio;
-using Terraria.Localization;
-using Terraria.ModLoader;
 
 namespace MonoStereoMod
 {
     internal static class SoundCache
     {
-        internal static readonly Dictionary<string, CachedSoundEffect> FileCache = [];
+        public static readonly Dictionary<Xna.SoundEffect, CachedSoundEffect> Cache = [];
 
-        internal static readonly Dictionary<ActiveSound, MonoStereoSoundEffect> ActiveSounds = [];
+        public static Dictionary<Xna.SoundEffectInstance, MonoStereoSoundEffect> SoundTracker { get; } = [];
 
-        internal static MonoStereoSoundEffect Get(ActiveSound activeSound) => TryGet(activeSound, out var sound) ? sound : null;
+        // This allows for the accessing of the FNA sounds from MonoStereo instances, in addition to the other way around.
+        public static Dictionary<MonoStereoSoundEffect, Xna.SoundEffectInstance> SoundLookup => SoundTracker.ToDictionary(kvp => kvp.Value, kvp => kvp.Key);
 
-        internal static bool TryGet(ActiveSound sound, out MonoStereoSoundEffect effect) => ActiveSounds.TryGetValue(sound, out effect);
-
-        internal static void Set(ActiveSound sound, MonoStereoSoundEffect effect) => ActiveSounds[sound] = effect;
-
-        internal static CachedSoundEffect Cache(string path, bool forceReload = false)
+        public static CachedSoundEffect GetCachedSound(Xna.SoundEffect sound)
         {
-            if (!forceReload && FileCache.TryGetValue(path, out CachedSoundEffect value))
-                return value;
+            if (Cache.TryGetValue(sound, out var cachedSound))
+                return cachedSound;
 
-            SplitName(path, out string modName, out string subName);
-            string assetName = AssetPathHelper.CleanPath(subName);
+            var monoStereoEffect = sound.GetMonoStereoEffect();
+            Cache.Add(sound, monoStereoEffect);
+            return monoStereoEffect;
+        }
 
-            if (modName == "Terraria")
-            {
-                using var stream = ((AssetRepository)Main.Assets).Sources().First(s => s.GetExtension(assetName) is not null).OpenStream(assetName + ".xnb");
-                XnbSoundEffectReader reader = new(stream, path);
-                value = reader.Read();
-            }
+        public static bool TryGetMonoStereo(Xna.SoundEffectInstance sound, out MonoStereoSoundEffect instance)
+        {
+            if (SoundTracker.TryGetValue(sound, out instance))
+                return true;
 
-            else if (ModLoader.TryGetMod(modName, out var mod))
-            {
-                var contentSource = mod.Assets.Sources().First(s => s.GetExtension(assetName) is not null);
-                string extension = contentSource.GetExtension(assetName);
+            return false;
+        }
 
-                using var stream = contentSource.OpenStream(assetName + extension);
-                value = LoadSoundEffect(stream, path, extension);
-            }
+        public static bool TryGetFNA(MonoStereoSoundEffect instance, out Xna.SoundEffectInstance sound)
+        {
+            if (SoundLookup.TryGetValue(instance, out sound))
+                return true;
 
-            else
-                throw new Terraria.ModLoader.Exceptions.MissingResourceException(Language.GetTextValue("tModLoader.LoadErrorModNotFoundDuringAsset", modName, path));
+            return false;
+        }
 
-            FileCache.Add(path, value);
-            return value;
+        public static void Map(Xna.SoundEffectInstance sound, MonoStereoSoundEffect instance) => SoundTracker.TryAdd(sound, instance);
+
+        public static void Unmap(Xna.SoundEffectInstance sound)
+        {
+            if (!SoundTracker.TryGetValue(sound, out var instance))
+                return;
+
+            instance.Dispose();
         }
 
         public static void CollectGarbage()
         {
-            var kvps = ActiveSounds.ToArray();
-            for (int i = 0; i < kvps.Length; ++i)
+            for (int i = 0; i < SoundTracker.Count; i++)
             {
-                if (kvps[i].Value.IsDisposed)
-                    ActiveSounds.Remove(kvps[i].Key);
+                var kvp = SoundTracker.ElementAt(i);
+                var sound = kvp.Key;
+
+                if (sound is null || sound.IsDisposed)
+                {
+                    var instance = kvp.Value;
+                    instance.Dispose();
+
+                    SoundTracker.Remove(sound);
+                    i--;
+                }
             }
         }
 
-        public static MonoStereoSoundEffect CreateInstance(this CachedSoundEffect soundEffect) => new(new CachedSoundEffectReader(soundEffect));
+        public static void Unload()
+        {
+            foreach (var sound in Cache.Values)
+                sound.Dispose();
+
+            Cache.Clear();
+            SoundTracker.Clear();
+        }
     }
 }

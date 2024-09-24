@@ -1,5 +1,4 @@
 ﻿using Microsoft.Xna.Framework;
-using MonoStereoMod.Utils;
 using Terraria;
 using Terraria.Audio;
 
@@ -7,65 +6,15 @@ namespace MonoStereoMod.Detours
 {
     internal static partial class Detours
     {
-        public static void On_ActiveSound_Play(On_ActiveSound.orig_Play orig, ActiveSound self)
-        {
-            if (!Program.IsMainThread)
-            {
-                RunOnMainThreadAndWait(() => On_ActiveSound_Play(orig, self));
-                return;
-            }
-
-            var soundEffectInstance = self.Style.GetRandomSoundEffect().CreateInstance();
-
-            soundEffectInstance.Pitch += self.Style.GetRandomPitch();
-            self.Pitch = soundEffectInstance.Pitch;
-
-            soundEffectInstance.IsLooped = self.Style.IsLooped;
-
-            soundEffectInstance.Play();
-
-            SoundCache.Set(self, soundEffectInstance);
-            self.Update();
-        }
-
-        public static void On_ActiveSound_Stop(On_ActiveSound.orig_Stop orig, ActiveSound self)
-        {
-            if (!Program.IsMainThread)
-            {
-                RunOnMainThreadAndWait(() => On_ActiveSound_Stop(orig, self));
-                return;
-            }
-
-            SoundCache.Get(self)?.Stop();
-        }
-
-        public static void On_ActiveSound_Pause(On_ActiveSound.orig_Pause orig, ActiveSound self)
-        {
-            if (!Program.IsMainThread)
-            {
-                RunOnMainThreadAndWait(() => On_ActiveSound_Pause(orig, self));
-                return;
-            }
-
-            SoundCache.Get(self)?.Pause();
-        }
-
-        public static void On_ActiveSound_Resume(On_ActiveSound.orig_Resume orig, ActiveSound self)
-        {
-            if (!Program.IsMainThread)
-            {
-                RunOnMainThreadAndWait(() => On_ActiveSound_Resume(orig, self));
-                return;
-            }
-
-            SoundCache.Get(self)?.Resume();
-        }
-
         public static void On_ActiveSound_Update(On_ActiveSound.orig_Update orig, ActiveSound self)
         {
-            var sound = SoundCache.Get(self);
-            if (sound is null)
+            var sound = self.Sound;
+
+            if (sound is null || sound.IsDisposed || !SoundCache.TryGetMonoStereo(sound, out _))
+            {
+                orig(self);
                 return;
+            }
 
             if (!Program.IsMainThread)
             {
@@ -78,7 +27,7 @@ namespace MonoStereoMod.Detours
 
             if (self.Callback?.Invoke(self) == false)
             {
-                sound.Stop();
+                sound.Stop(immediate: true);
                 return;
             }
 
