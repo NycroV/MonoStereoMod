@@ -28,7 +28,7 @@ namespace MonoStereoMod.Detours
             return xnaInstance;
         }
 
-        public static bool On_SoundEffect_Play(SoundEffectInstance_Play_OrigDelegate orig, SoundEffect self, float volume, float pitch, float pan)
+        public static bool On_SoundEffect_Play(SoundEffect_Play_OrigDelegate orig, SoundEffect self, float volume, float pitch, float pan)
         {
             var instance = self.CreateInstance();
             instance.Volume = volume;
