@@ -15,11 +15,13 @@ namespace MonoStereoMod
     {
         public static class Config
         {
+            // Configs are accessible here to allow for smaller dependencies with ILRepack
             public static int Latency { get; internal set; } = 150;
             public static int BufferCount { get; internal set; } = 8;
             public static int DeviceNumber { get; internal set; } = -1;
             public static string DeviceDisplayName { get => HighPriorityWaveOutEvent.GetCapabilities(DeviceNumber).ProductName; }
 
+            // Applies config changes to the output
             internal static void ResetOutput(int? latency = null, int? bufferCount = null, int? deviceNumber = null)
             {
                 Latency = latency ?? Latency;
@@ -114,6 +116,8 @@ namespace MonoStereoMod
         public override void Unload()
         {
             ModRunning = false;
+
+            // This is not a detour, we need to unhook manually
             Main.instance.Exiting -= Instance_Exiting;
             Instance = null;
 

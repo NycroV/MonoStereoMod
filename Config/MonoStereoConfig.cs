@@ -15,7 +15,7 @@ namespace MonoStereoMod.Config
         public override ConfigScope Mode => ConfigScope.ClientSide;
 
         [Header("Playback")]
-        [DefaultValue(150)]
+        [DefaultValue(75)]
         [Range(10, 250)]
         [Slider]
         public int Latency
