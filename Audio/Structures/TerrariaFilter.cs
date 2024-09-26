@@ -1,5 +1,6 @@
 ﻿using MonoStereo;
 using MonoStereo.Filters;
+using MonoStereoMod.Audio.Structures;
 using NAudio.Dsp;
 using System;
 
@@ -56,37 +57,59 @@ namespace MonoStereoMod
             // There isn't a pattern with which sounds it happens to, and it is caused by slight misalignmnet between consecutive buffers
             // It may be worth to implement a custom resampling algorithm to fix this, but I have other things I need to do first.
 
-            //if (_rate != 1f)
-            //{
-            //    int framesRequested = count / AudioStandards.ChannelCount;
-            //    int inNeeded = resampler.ResamplePrepare(framesRequested, AudioStandards.ChannelCount, out float[] inBuffer, out int inBufferOffset);
+            if (_rate != 1f && (Source is not MonoStereoSoundEffect effect || effect.Source is not TerrariaCachedSoundEffectReader))
+            {
+                int framesRequested = count / AudioStandards.ChannelCount;
+                int inNeeded = resampler.ResamplePrepare(framesRequested, AudioStandards.ChannelCount, out float[] inBuffer, out int inBufferOffset);
 
-            //    int inAvailable = Provider.Read(inBuffer, inBufferOffset, inNeeded * AudioStandards.ChannelCount) / AudioStandards.ChannelCount;
-            //    int outAvailable = resampler.ResampleOut(buffer, offset, inAvailable, framesRequested, AudioStandards.ChannelCount);
+                int inAvailable = Provider.Read(inBuffer, inBufferOffset, inNeeded * AudioStandards.ChannelCount) / AudioStandards.ChannelCount;
+                int outAvailable = resampler.ResampleOut(buffer, offset, inAvailable, framesRequested, AudioStandards.ChannelCount);
 
-            //    return outAvailable * AudioStandards.ChannelCount;
-            //}
+                return outAvailable * AudioStandards.ChannelCount;
+            }
 
             return base.ModifyRead(buffer, offset, count);
         }
 
         private void Pan(float[] buffer, int offset, int samplesRead)
         {
-            float normPan = (-Panning + 1f) / 2f;
-            float leftChannel = (float)Math.Sqrt(normPan);
-            float rightChannel = (float)Math.Sqrt(1 - normPan);
+            // The below panning strategy is the same panning strategy used by FAudio.
+            // Volume is not only adjusted on left/right channels, but channels are mixed
+            // in accordance with where the sound should actually be coming from.
 
-            for (int i = 0; i < samplesRead; i++)
+            float leftChannelLeftMultiplier;
+            float leftChannelRightMultiplier;
+
+            float rightChannelLeftMultiplier;
+            float rightChannelRightMultiplier;
+
+            // On the left...
+            if (Panning < 0f)
             {
-                if (i % 2 == 0)
-                {
-                    buffer[offset + i] *= leftChannel;
-                }
+                leftChannelLeftMultiplier = 0.5f * Panning + 1f;
+                leftChannelRightMultiplier = 0.5f * -Panning;
 
-                else
-                {
-                    buffer[offset + i] *= rightChannel;
-                }
+                rightChannelLeftMultiplier = 0f;
+                rightChannelRightMultiplier = Panning + 1f;
+            }
+
+            // On the right...
+            else
+            {
+                leftChannelLeftMultiplier = -Panning + 1f;
+                leftChannelRightMultiplier = 0f;
+
+                rightChannelLeftMultiplier = 0.5f * Panning;
+                rightChannelRightMultiplier = 0.5f * -Panning + 1f;
+            }
+
+            for (int i = 0; i < samplesRead; i += 2)
+            {
+                float leftChannel = buffer[offset + i];
+                float rightChannel = buffer[offset + i + 1];
+
+                buffer[offset + i] = (leftChannel * leftChannelLeftMultiplier) + (rightChannel * leftChannelRightMultiplier);
+                buffer[offset + i + 1] = (leftChannel * rightChannelLeftMultiplier) + (rightChannel * rightChannelRightMultiplier);
             }
         }
     }

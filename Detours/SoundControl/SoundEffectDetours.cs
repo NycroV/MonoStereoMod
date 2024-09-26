@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework.Audio;
 using MonoMod.RuntimeDetour;
 using MonoStereo.AudioSources.Sounds;
+using MonoStereoMod.Audio.Structures;
 using System.Reflection;
 
 namespace MonoStereoMod.Detours
@@ -22,7 +23,7 @@ namespace MonoStereoMod.Detours
         public static SoundEffectInstance On_SoundEffect_CreateInstance(SoundEffect_CreateInstance_OrigDelegate orig, SoundEffect self)
         {
             var xnaInstance = orig(self);
-            var msInstance = new MonoStereoSoundEffect(new CachedSoundEffectReader(SoundCache.GetCachedSound(self)));
+            var msInstance = new MonoStereoSoundEffect(new TerrariaCachedSoundEffectReader(SoundCache.GetCachedSound(self)));
 
             SoundCache.Map(xnaInstance, msInstance);
             return xnaInstance;

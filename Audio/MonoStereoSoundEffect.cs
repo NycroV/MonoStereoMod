@@ -2,6 +2,7 @@
 using MonoStereo;
 using MonoStereo.AudioSources;
 using MonoStereo.Filters;
+using MonoStereoMod.Audio.Structures;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,10 +25,14 @@ namespace MonoStereoMod
             get => soundControl.PitchFactor;
             set
             {
-                soundControl.PitchFactor = MathHelper.Clamp(value, -1f, 1f);
+                value = MathHelper.Clamp(value, -1f, 1f);
+                soundControl.PitchFactor = value;
 
                 if (SoundCache.TryGetFNA(this, out var sound))
                     sound.set_Pitch(Pitch);
+
+                if (Source is TerrariaCachedSoundEffectReader reader)
+                    reader.EffectivePitch = (float)Math.Pow(2d, value); ;
             }
         }
 
