@@ -59,7 +59,6 @@ namespace MonoStereoMod
             StartEngine();
 
             On_ActiveSound.Update += On_ActiveSound_Update;
-
             On_SoundInstanceGarbageCollector.Update += On_SoundInstanceGarbageCollector_Update;
 
             On_LegacyAudioSystem.Update += On_LegacyAudioSystem_Update;

@@ -16,6 +16,7 @@ namespace MonoStereoMod.Testing
         public bool reversed = false;
         public int slowdownFrame = slowdownTime;
         public const int slowdownTime = 90;
+        public static Queue<long> netSamples = [];
 
         public static void Apply()
         {
@@ -42,6 +43,9 @@ namespace MonoStereoMod.Testing
             }
 
             timeController.TimeSpeed = slowdownFrame / (float)slowdownTime * (reversed ? -1f : 1f);
+
+            while(netSamples.TryDequeue(out var netSample))
+                Main.NewText(netSample.ToString());
         }
     }
 }

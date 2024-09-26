@@ -227,6 +227,8 @@ namespace MonoStereoMod.Testing
                 return samplesRead + base.ModifyRead(buffer, offset, samplesRemaining);
             }
 
+            long pos1 = seekSource.Position;
+
             // When we reverse audio, we want to take both loop start and end into account.
             long startIndex = long.Max(loopSource.LoopStart, 0);
             long samplesAvailable = seekSource.Position - startIndex;
@@ -288,6 +290,10 @@ namespace MonoStereoMod.Testing
             // the reading were REALLY reversed, this is technically where it would
             // end, not begin.
             seekSource.Position = readStartPosition;
+
+            long pos2 = seekSource.Position;
+            DebugPlayer.netSamples.Enqueue(pos2 - pos1);
+
             return samplesRead + sourceSamples;
         }
     }

@@ -16,7 +16,7 @@ namespace MonoStereoMod.Config
 
         [Header("Playback")]
         [DefaultValue(150)]
-        [Range(50, 250)]
+        [Range(10, 250)]
         [Slider]
         public int Latency
         {
