@@ -59,7 +59,7 @@ namespace MonoStereoMod.Audio.Structures
         // we can get around this issue by resampling the entire buffer at once, and then
         // reading from the resampled buffer like normal.
         //
-        // This would not be an option for songs, due to how long their sample arrays are.
+        // This *should* NOT be an option for songs, due to how long their sample arrays are.
 
         #region Resampling
 

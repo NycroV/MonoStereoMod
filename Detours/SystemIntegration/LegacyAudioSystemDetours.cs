@@ -12,6 +12,7 @@ namespace MonoStereoMod.Detours
 {
     internal static partial class Detours
     {
+        // Updates MonoStereo mixer volumes whenever vanilla update behavior occurs.
         public static void On_LegacyAudioSystem_Update(On_LegacyAudioSystem.orig_Update orig, LegacyAudioSystem self)
         {
             AudioManager.MusicVolume = Main.musicVolume.GetRealVolume();
@@ -20,6 +21,8 @@ namespace MonoStereoMod.Detours
             orig(self);
         }
 
+        // Exactly the same as vanilla, but we replace their
+        // IAudioTrack implementations with our own MonoStereo sources.
         public static IAudioTrack On_LegacyAudioSystem_FindReplacementTrack(On_LegacyAudioSystem.orig_FindReplacementTrack orig, LegacyAudioSystem self, List<IContentSource> sources, string assetPath)
         {
             for (int i = 0; i < sources.Count; i++)
@@ -58,12 +61,14 @@ namespace MonoStereoMod.Detours
             return null;
         }
 
+        // Pause the mixer in addition to each sound (performance benefit).
         public static void On_LegacyAudioSystem_PauseAll(On_LegacyAudioSystem.orig_PauseAll orig, LegacyAudioSystem self)
         {
             AudioManager.MasterMixer.Pause();
             orig(self);
         }
 
+        // Resume the mixer in addition to each sound.
         public static void On_LegacyAudioSystem_ResumeAll(On_LegacyAudioSystem.orig_ResumeAll orig, LegacyAudioSystem self)
         {
             AudioManager.MasterMixer.Resume();

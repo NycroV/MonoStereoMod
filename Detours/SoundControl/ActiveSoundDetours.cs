@@ -6,6 +6,7 @@ namespace MonoStereoMod.Detours
 {
     internal static partial class Detours
     {
+        // Vanilla behavior, but we apply volume to the master mixers instead of each individual sound.
         public static void On_ActiveSound_Update(On_ActiveSound.orig_Update orig, ActiveSound self)
         {
             var sound = self.Sound;

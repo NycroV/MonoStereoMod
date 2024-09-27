@@ -11,12 +11,18 @@ namespace MonoStereoMod.Detours
 {
     internal static partial class Detours
     {
+        #region Hooks, Delegates, and Reflection, Oh My!
+
         public static Hook MusicLoader_LoadMusic_Hook;
 
         public static MethodInfo MusicLoader_LoadMusic_Method = typeof(MusicLoader).GetMethod("LoadMusic", BindingFlags.NonPublic | BindingFlags.Static);
 
         public delegate IAudioTrack MusicLoader_LoadMusic_OrigDelegate(string path, string extension);
 
+        #endregion
+
+        // Exactly the same as vanilla, but we replace their
+        // IAudioTrack implementations with our own MonoStereo sources.
         public static IAudioTrack On_MusicLoader_LoadMusic(MusicLoader_LoadMusic_OrigDelegate orig, string path, string extension)
         {
             string fileName = path + extension;

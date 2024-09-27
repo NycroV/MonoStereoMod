@@ -53,9 +53,10 @@ namespace MonoStereoMod
 
         public override int ModifyRead(float[] buffer, int offset, int count)
         {
-            // FIX ME: resampling is causing a lot of audio artifacts, but only with specific sounds (???)
-            // There isn't a pattern with which sounds it happens to, and it is caused by slight misalignmnet between consecutive buffers
-            // It may be worth to implement a custom resampling algorithm to fix this, but I have other things I need to do first.
+            // We only utilize real-time resampling if the rate is not 1 (no pitch adjustment)
+            // AND the source is not a TerrariaCachedSoundEffectReader. This is because the Terraria reader
+            // resamples the data in its entirety whenever pitch is changed to help reduce
+            // artifacts when placing resampled buffers end to end (in some scenarios).
 
             if (_rate != 1f && (Source is not MonoStereoSoundEffect effect || effect.Source is not TerrariaCachedSoundEffectReader))
             {

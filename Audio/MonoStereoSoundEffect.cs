@@ -31,6 +31,7 @@ namespace MonoStereoMod
                 if (SoundCache.TryGetFNA(this, out var sound))
                     sound.set_Pitch(Pitch);
 
+                // Resample the data for pitch adjustment here
                 if (Source is TerrariaCachedSoundEffectReader reader)
                     reader.EffectivePitch = (float)Math.Pow(2d, value); ;
             }

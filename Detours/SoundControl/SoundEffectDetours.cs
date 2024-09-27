@@ -7,6 +7,8 @@ namespace MonoStereoMod.Detours
 {
     internal static partial class Detours
     {
+        #region Hooks, Delegates, and Reflection, Oh My!
+
         public static Hook SoundEffect_CreateInstance_Hook;
 
         public static Hook SoundEffect_Play_Hook;
@@ -19,6 +21,10 @@ namespace MonoStereoMod.Detours
 
         public delegate bool SoundEffect_Play_OrigDelegate(SoundEffect self, float volume, float pitch, float pan);
 
+        #endregion
+
+        // Vanilla creation behavior, but also created a MonoStereo mapping
+        // that all property/method calls for the FNA instance should be forwarded to.
         public static SoundEffectInstance On_SoundEffect_CreateInstance(SoundEffect_CreateInstance_OrigDelegate orig, SoundEffect self)
         {
             var xnaInstance = orig(self);
@@ -28,6 +34,9 @@ namespace MonoStereoMod.Detours
             return xnaInstance;
         }
 
+        // Literally exactly the same as vanilla behavior, but
+        // replaces `new SoundEffectInstance(SoundEffect)` with `SoundEffect.CreateInstance()`,
+        // that way we can guarantee sound mappings for the SoundEffect exist.
         public static bool On_SoundEffect_Play(SoundEffect_Play_OrigDelegate orig, SoundEffect self, float volume, float pitch, float pan)
         {
             var instance = self.CreateInstance();

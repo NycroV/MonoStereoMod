@@ -4,9 +4,20 @@ using System.IO;
 
 namespace MonoStereoMod.Systems
 {
+    // Provides a way to read data from an XNA WaveBank file.
     internal class WaveBankCue : IDisposable
     {
+        #region Metadata
+
         public readonly string Name;
+
+        private readonly WaveFormat SourceFormat;
+
+        public WaveFormat WaveFormat { get; }
+
+        #endregion
+
+        #region Playback
 
         private readonly BinaryReader Reader;
 
@@ -16,9 +27,9 @@ namespace MonoStereoMod.Systems
 
         internal byte[] Buffer;
 
-        private readonly WaveFormat SourceFormat;
+        #endregion
 
-        public WaveFormat WaveFormat { get; }
+        #region Play region
 
         private readonly long SourceLength;
 
@@ -29,6 +40,8 @@ namespace MonoStereoMod.Systems
         public long LoopStart { get; }
 
         public long LoopEnd { get; }
+
+        #endregion
 
         public WaveBankCue(BinaryReader reader, WaveFormat waveFormat, string name, long offset, long length, long loopStart, long loopEnd)
         {
@@ -54,9 +67,13 @@ namespace MonoStereoMod.Systems
 
         internal void Load()
         {
+            // The Reader is actually accessing the original WaveBank file.
+            // We seek to the beginning of the audio data region, and read it all into memory.
             Reader.BaseStream.Seek(Offset, SeekOrigin.Begin);
             byte[] buffer = Reader.ReadBytes((int)SourceLength);
 
+            // Vanilla tracks are encoding using the Microsoft ADPCM format.
+            // We need to conver them to readable, raw PCM samples.
             if (Adpcm)
                 buffer = ConvertMsAdpcmToPcm(buffer, 0, buffer.Length, WaveFormat.Channels, (SourceFormat.BlockAlign + 22) * WaveFormat.Channels);
 

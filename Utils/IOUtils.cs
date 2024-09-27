@@ -10,6 +10,9 @@ namespace MonoStereoMod.Utils
 {
     internal static partial class MonoStereoUtils
     {
+        // Vanilla WaveBank files have strings that read "null terminated", meaning
+        // they will always be a certain number of bytes, but the actual string data
+        // ends at the first instance of a null character (literal '\0').
         public static string ReadNullTerminatedString(this BinaryReader reader, int bytes)
         {
             byte[] buffer = reader.ReadBytes(bytes);
@@ -29,6 +32,11 @@ namespace MonoStereoMod.Utils
             return string.Concat(chars);
         }
 
+        // You know, I spent an embarassingly long time reading through VGMStream/FAudio source
+        // and translating the C code into C#, only to realize after the fact that logic for reading
+        // WaveBanks in C# was already available in MonoGame. That was not a fun day.
+        //
+        // Reads a WaveBank file, and returns a list of all "cues" (tracks) contained within that bank.
         internal static List<WaveBankCue> ReadCues(BinaryReader[] readers, LegacyAudioSystem loadedSystem)
         {
             BinaryReader reader = readers[0];

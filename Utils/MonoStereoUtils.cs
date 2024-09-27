@@ -17,6 +17,8 @@ namespace MonoStereoMod.Utils
 {
     internal static partial class MonoStereoUtils
     {
+        // These utilities are all available in vanilla source, but are
+        // either internal or private. We can just re-implement them here.
         #region Replacement Vanilla Utilities
 
         public static void RunOnMainThreadAndWait(Action action) => Main.RunOnMainThread(action).GetAwaiter().GetResult();
@@ -34,8 +36,11 @@ namespace MonoStereoMod.Utils
 
         #endregion
 
+        // Provides standardized MonoStereo metadata management utilities.
         #region MonoStereo Metadata Utilities
 
+        // Reads comments of a track that is NOT a .ogg file.
+        // We use ATL for this.
         public static Dictionary<string, string> ReadComments(this Stream stream)
         {
             long position = stream.Position;
@@ -63,9 +68,13 @@ namespace MonoStereoMod.Utils
             return comments;
         }
 
+        // Default supported file types.
         private static readonly string[] supportedExtensions = [".ogg", ".wav", ".mp3"];
         public static bool IsSupported(this string extension) => supportedExtensions.Contains(extension);
 
+        // Converts an ISampleProvider of any formatting (sample rate or channels) to
+        // a standardized, 44.1kHz 2 channel stream. Also modifies loopStart and loopEnd
+        // tags to account for sample size adjustment.
         public static ISampleProvider Reformat(this ISampleProvider provider, ref long loopStart, ref long loopEnd)
         {
             if (provider.WaveFormat.SampleRate != AudioStandards.SampleRate)
@@ -99,8 +108,12 @@ namespace MonoStereoMod.Utils
         }
         #endregion
 
+        // Utilities for integrating MonoStereo into tMod.
         #region MonoStereo Mod Utilities
 
+        // Adds the MonoStereo content source to a list of sources.
+        // This source acts as a psuedo-texture pack, so that we can directly override
+        // vanilla's WaveBank readers, without needing ModScenes for every single track.
         public static List<IContentSource> InsertMonoStereoSource(this List<IContentSource> contentSources)
         {
             var source = new CueReadingContentSource();
@@ -109,6 +122,7 @@ namespace MonoStereoMod.Utils
             return contentSources;
         }
 
+        // Removes the custom MonoStereo source from a list of sources.
         public static List<IContentSource> RemoveMonoStereoSource(this List<IContentSource> contentSources)
         {
             int index = contentSources.FindIndex(c => c is CueReadingContentSource);
@@ -117,6 +131,10 @@ namespace MonoStereoMod.Utils
             return contentSources;
         }
 
+        // A utility for doing a looped read when looping tags are present.
+        // sampleProvider and seekSource are two different parameters, as
+        // there is usually an underlying sampleProvider, but an encapsulating
+        // class for containing the ability to seek.
         public static int LoopedRead(this ISampleProvider sampleProvider, float[] buffer, int offset, int count, ISeekableSampleProvider seekSource, bool isLooped, long length, long loopStart, long loopEnd)
         {
             int samplesCopied = 0;
@@ -147,6 +165,8 @@ namespace MonoStereoMod.Utils
             return samplesCopied;
         }
 
+        // Applies vanilla's volume curve, but slightly
+        // modified to allow tracks to smoothly slope to 0.
         public static float GetRealVolume(this float value)
         {
             float exponent = (value * 31f - 36.94f) * 0.05f;
@@ -157,6 +177,16 @@ namespace MonoStereoMod.Utils
 
         #endregion
 
+        // We do not have a way to read ADPCM samples in real time, as the encoding is very complex
+        // and retrieving a specific number of samples is not easy. This serves as a way to
+        // convert ADPCM encoded data into readable, PCM samples. Credit to MonoGame for this logic.
+        //
+        // In the future it may be worth finding a way to convert data in real-time. This would have a slightly
+        // negative impact on performance (and mental sanity), but would have a positive impace on memory profile.
+        // Could save maybe 20mb of RAM on average, with some instances being higher and some lower. Depends
+        // on the length of a track that is currently playing, as well as how many are currently playing. PCM data
+        // for ADPCM tracks is only cached when that track is actively playing so as to reduce memory overhead
+        // as much as possible.
         #region ADPCM Conversion
 
         private static readonly int[] adaptationTable =
@@ -234,7 +264,6 @@ namespace MonoStereoMod.Utils
         /// <summary>
         /// Converts a buffer of Adpcm data to 16-bit pcm
         /// </summary>
-
         internal static byte[] ConvertMsAdpcmToPcm(byte[] buffer, int offset, int count, int channels, int blockAlignment)
         {
             MsAdpcmState channel0 = new();
