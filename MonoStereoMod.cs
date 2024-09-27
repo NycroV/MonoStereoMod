@@ -57,7 +57,7 @@ namespace MonoStereoMod
         public override void Load()
         {
             ModRunning = true;
-            Main.instance.Exiting += Instance_Exiting;
+            Main.instance.Exiting += Instance_Exiting; // Sets ModRunning to false whenever the game exits
 
             if (Main.audioSystem is not LegacyAudioSystem system)
                 return;
