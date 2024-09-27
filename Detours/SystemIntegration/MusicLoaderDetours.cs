@@ -25,6 +25,10 @@ namespace MonoStereoMod.Detours
         // IAudioTrack implementations with our own MonoStereo sources.
         public static IAudioTrack On_MusicLoader_LoadMusic(MusicLoader_LoadMusic_OrigDelegate orig, string path, string extension)
         {
+            // This means this track is a custom implementation registered by the user.
+            if (extension == ".monostereo")
+                return SoundCache.GetCustomMusic(path);
+
             string fileName = path + extension;
             path = $"tmod:{path}{extension}";
 

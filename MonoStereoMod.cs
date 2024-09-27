@@ -2,12 +2,14 @@ global using static MonoStereoMod.Utils.MonoStereoUtils;
 using static MonoStereoMod.Detours.Detours;
 using Microsoft.Xna.Framework;
 using MonoStereo;
+using MonoStereo.AudioSources;
 using MonoStereo.Outputs;
 using ReLogic.Utilities;
 using System.Linq;
 using Terraria;
 using Terraria.Audio;
 using Terraria.ModLoader;
+using System;
 
 namespace MonoStereoMod
 {
@@ -18,10 +20,11 @@ namespace MonoStereoMod
             // Configs are accessible here to allow for smaller dependencies with ILRepack.
             // ILRepack is used to compile MonoStereoMod.Dependencies.dll, which consolidates all
             // package references neatly into a single project reference.
-
+            //
             // For some reason, including references to most tMod types does not cause problems, but
             // including the config class causes ILRepack to require a reference to tModLoader.dll,
             // when it otherwise wouldn't. Possible because of the property attributes? Not 100% sure.
+
             public static int Latency { get; internal set; } = 150;
             public static int BufferCount { get; internal set; } = 8;
             public static int DeviceNumber { get; internal set; } = -1;
@@ -140,7 +143,8 @@ namespace MonoStereoMod
             if (Main.audioSystem is not LegacyAudioSystem system)
                 return;
 
-            // These tracks are not included in the mappings
+            // These tracks are not included in the mappings, nor the automatic unloading
+            // whenever this mod is unloaded by TML (they are not registered with the MusicLoader)
             foreach (var track in system.AudioTracks.Where(s => s is MonoStereoAudioTrack))
                 track.Dispose();
 
@@ -160,6 +164,32 @@ namespace MonoStereoMod
         /// or <see langword="null"/> if the track could not be resolved.</returns>
         public static MonoStereoAudioTrack GetSong(int musicIndex)
             => Main.audioSystem is LegacyAudioSystem system ? system.AudioTracks[musicIndex] is MonoStereoAudioTrack track ? track : null : null;
+
+        /// <summary>
+        /// Replacement for <see cref="MusicLoader.AddMusic(Mod, string)"/> that allows you to utilize your own <see cref="Song"/> implementation,<br/>
+        /// instead of being forced to only use file readers.<br/><br/>
+        /// You can inherit from <see cref="MonoStereoAudioTrack"/> if you want extra properties/methods,<br/>
+        /// but you should be fine with simply creating a custom <see cref="ISongSource"/> implementation and using <see langword="new"/> <see cref="MonoStereoAudioTrack"/>(<see cref="ISongSource"/>)
+        /// </summary>
+        /// <param name="mod">The <see cref="Mod"/> that is adding this custom music.</param>
+        /// <param name="musicName">The name to associate with the custom music.<br/>
+        /// You will use this for <see cref="MusicLoader.GetMusic(Mod, string)"/> and <see cref="MusicLoader.GetMusicSlot(Mod, string)"/></param>
+        /// <param name="track">The custom track you want to register.</param>
+        public static void AddCustomMusic(Mod mod, string musicName, MonoStereoAudioTrack track)
+        {
+            // This can only be called during mod loading.
+            if (!mod.IsLoading())
+                throw new Exception($"{nameof(AddCustomMusic)} can only be called during mod loading.");
+
+            // Reserve a music slot, and attach the mod name to the path.
+            int id = ReserveMusicLoaderID();
+            musicName = $"{mod.Name}/{musicName}";
+
+            // Sets MusicLoader.musicByPath (for use by MusicLoader.GetMusic()) as well as
+            // MusicLoader.musicExtensions (for use to determine loading from our own cache)
+            MusicLoaderMusicByPath()[musicName] = id;
+            MusicLoaderMusicExtensions()[musicName] = ".monostereo";
+        }
 
         /// <summary>
         /// Attempts to get the <see cref="MonoStereoSoundEffect"/> associated with the sound at the specified <paramref name="slotId"/>

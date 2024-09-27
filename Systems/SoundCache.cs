@@ -12,6 +12,14 @@ namespace MonoStereoMod
         // data as an FNA SoundEffect, but is usable by MonoStereo.
         public static readonly Dictionary<Xna.SoundEffect, CachedSoundEffect> Cache = [];
 
+        // This allows users to register custom music implementations for MonoStereo use
+        public static readonly Dictionary<string, MonoStereoAudioTrack> CustomMusicSlots = [];
+
+        // The MusicLoader will automatically call dispose on tracks that have been "loaded" - we
+        // don't want to call Dispose twice on accident. Theoeretically it shouldn't
+        // cause issues, but, you know... just in case.
+        public static readonly List<string> LoadedCustomMusicSlots = [];
+
         // Allows us to forward calls for certain SoundEffectInstance properties/methods to
         // a MonoStereoSoundEffect that takes its place.
         public static Dictionary<Xna.SoundEffectInstance, MonoStereoSoundEffect> SoundTracker { get; } = [];
@@ -29,6 +37,16 @@ namespace MonoStereoMod
             var monoStereoEffect = sound.GetMonoStereoEffect();
             Cache.Add(sound, monoStereoEffect);
             return monoStereoEffect;
+        }
+
+        // Retrieves a custom music implementation, and marks it as loaded by TML
+        // so that we don't accidentally call dispose twice.
+        public static MonoStereoAudioTrack GetCustomMusic(string musicName)
+        {
+            if (!LoadedCustomMusicSlots.Contains(musicName))
+                LoadedCustomMusicSlots.Add(musicName);
+
+            return CustomMusicSlots[musicName];
         }
 
         // Attempts to access the MonoStereo sound effect that calls for an FNA
@@ -77,7 +95,7 @@ namespace MonoStereoMod
             }
         }
 
-        // Clears all mappings, for both cached sound data and active instances.
+        // Clears all mappings, for cached sound data, active instances, and custom music
         public static void Unload()
         {
             foreach (var sound in Cache.Values)
@@ -86,8 +104,13 @@ namespace MonoStereoMod
             foreach (var sound in SoundTracker.Values)
                 sound.Dispose();
 
+            foreach (var song in CustomMusicSlots.Where(kvp => !LoadedCustomMusicSlots.Contains(kvp.Key)).ToDictionary().Values)
+                song.Dispose();
+
             Cache.Clear();
             SoundTracker.Clear();
+            LoadedCustomMusicSlots.Clear();
+            CustomMusicSlots.Clear();
         }
     }
 }

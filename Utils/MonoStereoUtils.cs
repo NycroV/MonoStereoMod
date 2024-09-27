@@ -68,10 +68,6 @@ namespace MonoStereoMod.Utils
             return comments;
         }
 
-        // Default supported file types.
-        private static readonly string[] supportedExtensions = [".ogg", ".wav", ".mp3"];
-        public static bool IsSupported(this string extension) => supportedExtensions.Contains(extension);
-
         // Converts an ISampleProvider of any formatting (sample rate or channels) to
         // a standardized, 44.1kHz 2 channel stream. Also modifies loopStart and loopEnd
         // tags to account for sample size adjustment.

@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Content;
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using Terraria.ModLoader;
 
@@ -54,5 +55,22 @@ namespace MonoStereoMod.Utils
 
         private static readonly FieldInfo loopLength = typeof(SoundEffect).GetField("loopLength", BindingFlags.Instance | BindingFlags.NonPublic);
         public static uint GetLoopLength(this SoundEffect sound) => (uint)loopLength.GetValue(sound);
+
+        // Accesses the internal `loading` field of a mod. This should only be true when a mod is loading.
+        // We use this for the MonoStereoMod API when adding custom music implementations.
+        private static readonly FieldInfo modLoading = typeof(Mod).GetField("loading", BindingFlags.Instance | BindingFlags.NonPublic);
+        public static bool IsLoading(this Mod mod) => (bool)modLoading.GetValue(mod);
+
+        // Used to reserve our own music slot ID for the MonoStereoMod API when adding custom music implementations.
+        private static readonly MethodInfo reserveMusicId = typeof(MusicLoader).GetMethod("ReserveMusicID", BindingFlags.Static | BindingFlags.NonPublic);
+        public static int ReserveMusicLoaderID() => (int)reserveMusicId.Invoke(null, null);
+
+        // Used to retrieve the internal TML dictionary for music paths to slots.
+        private static readonly FieldInfo musicByPath = typeof(MusicLoader).GetField("musicByPath", BindingFlags.Static | BindingFlags.NonPublic);
+        public static Dictionary<string, int> MusicLoaderMusicByPath() => (Dictionary<string, int>)musicByPath.GetValue(null);
+
+        // Used to retrieve the internal TML dictionary for music paths to extensions.
+        private static readonly FieldInfo musicExtensions = typeof(MusicLoader).GetField("musicExtensions", BindingFlags.Static| BindingFlags.NonPublic);
+        public static Dictionary<string, string> MusicLoaderMusicExtensions() => (Dictionary<string, string>)musicExtensions.GetValue(null);
     }
 }
