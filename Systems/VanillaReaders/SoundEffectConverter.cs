@@ -1,9 +1,6 @@
 ﻿using MonoStereo;
 using NAudio.Wave;
-using OggVorbisEncoder;
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.InteropServices;
 
 namespace MonoStereoMod.Systems.VanillaReaders

@@ -42,7 +42,7 @@ namespace MonoStereoMod
             get => soundControl.Panning;
             set => soundControl.Panning = value;
         }
-        
+
         // Volume exists as a property of Song
 
         public bool IsPlaying => !IsDisposed && PlaybackState == PlaybackState.Playing;

@@ -10,7 +10,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Terraria;
-using Terraria.Audio;
 using Terraria.Localization;
 using Terraria.ModLoader.Exceptions;
 

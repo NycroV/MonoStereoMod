@@ -53,7 +53,7 @@ namespace MonoStereoMod.Audio.Reading
 
             // We read and then seek to 0 as a sort of way to "initialize" the stream
             // Ogg encoding can get funky when you try to seek before any reading occurs
-            
+
             // Exactly `Latency` milliseconds of samples
             int sampleCount = AudioStandards.SampleRate / 1000 * MonoStereoMod.Config.Latency * AudioStandards.ChannelCount;
             Provider.Read(new float[sampleCount], 0, sampleCount);

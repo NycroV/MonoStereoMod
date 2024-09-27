@@ -47,7 +47,7 @@ namespace MonoStereoMod
 
         public override void PostProcess(float[] buffer, int offset, int samplesRead)
         {
-            if (Panning != 0f) 
+            if (Panning != 0f)
                 Pan(buffer, offset, samplesRead);
         }
 

@@ -1,6 +1,4 @@
-﻿using MonoStereo;
-using MonoStereo.Encoding;
-using MonoStereoMod.Systems;
+﻿using MonoStereoMod.Systems;
 using NAudio.Wave;
 using System;
 using System.Collections.Generic;

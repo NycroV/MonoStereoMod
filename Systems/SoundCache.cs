@@ -1,8 +1,8 @@
 ﻿using MonoStereo;
-using System.Collections.Generic;
-using Xna = Microsoft.Xna.Framework.Audio;
 using MonoStereoMod.Systems.VanillaReaders;
+using System.Collections.Generic;
 using System.Linq;
+using Xna = Microsoft.Xna.Framework.Audio;
 
 namespace MonoStereoMod
 {
@@ -72,6 +72,9 @@ namespace MonoStereoMod
         public static void Unload()
         {
             foreach (var sound in Cache.Values)
+                sound.Dispose();
+
+            foreach (var sound in SoundTracker.Values)
                 sound.Dispose();
 
             Cache.Clear();
