@@ -1,4 +1,5 @@
-﻿using Terraria.Audio;
+﻿using MonoStereoMod.Systems;
+using Terraria.Audio;
 
 namespace MonoStereoMod.Detours
 {

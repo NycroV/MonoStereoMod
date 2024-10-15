@@ -10,6 +10,7 @@ namespace MonoStereoMod.Config
     {
         [JsonIgnore] private int latency = MonoStereoMod.Config.Latency;
         [JsonIgnore] private int bufferCount = MonoStereoMod.Config.BufferCount;
+        [JsonIgnore] private bool forceHighPerformance = MonoStereoMod.Config.ForceHighPerformance;
         [JsonIgnore] private int outputDevice = MonoStereoMod.Config.DeviceNumber;
 
         public override ConfigScope Mode => ConfigScope.ClientSide;
@@ -45,6 +46,14 @@ namespace MonoStereoMod.Config
             }
         }
 
+        [DefaultValue(false)]
+        [ReloadRequired]
+        public bool ForceHighPerformance
+        {
+            get => forceHighPerformance;
+            set => forceHighPerformance = value;
+        }
+
         [Header("Output")]
         [DefaultValue(-1)]
         [Range(-2, 100)]
@@ -77,6 +86,7 @@ namespace MonoStereoMod.Config
         {
             MonoStereoMod.Config.Latency = Latency;
             MonoStereoMod.Config.BufferCount = BufferCount;
+            MonoStereoMod.Config.ForceHighPerformance = ForceHighPerformance;
             MonoStereoMod.Config.DeviceNumber = OutputDevice;
         }
     }

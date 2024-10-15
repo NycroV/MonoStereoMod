@@ -1,10 +1,9 @@
 ﻿using MonoStereo;
-using MonoStereoMod.Systems.VanillaReaders;
 using System.Collections.Generic;
 using System.Linq;
 using Xna = Microsoft.Xna.Framework.Audio;
 
-namespace MonoStereoMod
+namespace MonoStereoMod.Systems
 {
     internal static class SoundCache
     {

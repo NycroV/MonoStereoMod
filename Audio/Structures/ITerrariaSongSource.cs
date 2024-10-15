@@ -1,4 +1,6 @@
-﻿namespace MonoStereo.AudioSources
+﻿
+// Add this to the same namespace as the normal ISongSource
+namespace MonoStereo.AudioSources
 {
     public interface ITerrariaSongSource : ISongSource
     {

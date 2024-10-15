@@ -2,7 +2,8 @@
 using MonoStereo;
 using MonoStereo.AudioSources;
 using MonoStereo.Filters;
-using MonoStereoMod.Audio.Structures;
+using MonoStereoMod.Audio;
+using MonoStereoMod.Systems;
 using System;
 using System.Collections.Generic;
 using System.Linq;

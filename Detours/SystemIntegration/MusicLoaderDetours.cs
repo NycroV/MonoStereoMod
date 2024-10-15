@@ -1,7 +1,8 @@
 ﻿using MonoMod.RuntimeDetour;
 using MonoStereo.AudioSources;
 using MonoStereo.AudioSources.Songs;
-using MonoStereoMod.Audio.Reading;
+using MonoStereoMod.Audio;
+using MonoStereoMod.Systems;
 using System.IO;
 using System.Reflection;
 using Terraria.Audio;
@@ -29,6 +30,14 @@ namespace MonoStereoMod.Detours
             if (extension == ".monostereo")
                 return SoundCache.GetCustomMusic(path);
 
+            // This means the track has been marked to be "high performance" by the user.
+            bool highPerformance = MonoStereoMod.Config.ForceHighPerformance;
+            if (extension.StartsWith(MonoStereoMod.HighPerformanceExtensionPrefix))
+            {
+                highPerformance = true;
+                extension = extension.Replace(MonoStereoMod.HighPerformanceExtensionPrefix, ".");
+            }
+
             string fileName = path + extension;
             path = $"tmod:{path}{extension}";
 
@@ -42,7 +51,8 @@ namespace MonoStereoMod.Detours
                 _ => throw new FileLoadException($"Unknown music extension {extension}"),
             };
 
-            return new MonoStereoAudioTrack(new BufferedSongReader(source, 2f));
+            ISongSource reader = highPerformance ? new HighPerformanceSongSource(source) : new BufferedSongReader(source, 2f);
+            return new MonoStereoAudioTrack(reader);
         }
     }
 }

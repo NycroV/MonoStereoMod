@@ -72,5 +72,9 @@ namespace MonoStereoMod.Utils
         // Used to retrieve the internal TML dictionary for music paths to extensions.
         private static readonly FieldInfo musicExtensions = typeof(MusicLoader).GetField("musicExtensions", BindingFlags.Static| BindingFlags.NonPublic);
         public static Dictionary<string, string> MusicLoaderMusicExtensions() => (Dictionary<string, string>)musicExtensions.GetValue(null);
+
+        // Contains tML supported music extensions
+        private static readonly FieldInfo supportedExtensions = typeof(MusicLoader).GetField("supportedExtensions", BindingFlags.Static | BindingFlags.NonPublic);
+        public static string[] MusicLoaderSupportedExtensions() => (string[])supportedExtensions.GetValue(null);
     }
 }

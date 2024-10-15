@@ -4,17 +4,35 @@ using Microsoft.Xna.Framework;
 using MonoStereo;
 using MonoStereo.AudioSources;
 using MonoStereo.Outputs;
+using MonoStereoMod.Systems;
 using ReLogic.Utilities;
 using System.Linq;
 using Terraria;
 using Terraria.Audio;
 using Terraria.ModLoader;
 using System;
+using MonoStereoMod.Utils;
 
 namespace MonoStereoMod
 {
     public class MonoStereoMod : Mod
     {
+        /// <summary>
+        /// Allows other mods to force "high performance mode" to be active.
+        /// </summary>
+        [AttributeUsage(AttributeTargets.Class)]
+        public class ForceHighPerformanceAttribute : Attribute
+        { }
+
+        // Used to force only specific tracks to be high performance.
+        // Stands for:
+        //
+        // M(ono)
+        // S(tereo)
+        // H(igh)
+        // P(erformance)
+        internal const string HighPerformanceExtensionPrefix = ".mshp-";
+
         public static class Config
         {
             // Configs are accessible here to allow for smaller dependencies with ILRepack.
@@ -29,6 +47,7 @@ namespace MonoStereoMod
             public static int BufferCount { get; internal set; } = 8;
             public static int DeviceNumber { get; internal set; } = -1;
             public static string DeviceDisplayName { get => HighPriorityWaveOutEvent.GetCapabilities(DeviceNumber).ProductName; }
+            public static bool ForceHighPerformance { get; internal set; } = false;
 
             // Applies config changes to the output
             internal static void ResetOutput(int? latency = null, int? bufferCount = null, int? deviceNumber = null)
@@ -102,7 +121,7 @@ namespace MonoStereoMod
             SoundEffectInstance_Resume_Hook = new(SoundEffectInstance_Resume_Method, On_SoundEffectInstance_Resume);
             SoundEffectInstance_Stop_Hook = new(SoundEffectInstance_Stop_Method, On_SoundEffectInstance_Stop);
 
-            // Hook application for custom hooks
+            // Application for custom hooks
             MusicLoader_LoadMusic_Hook.Apply();
 
             SoundEffect_CreateInstance_Hook.Apply();
@@ -121,6 +140,31 @@ namespace MonoStereoMod
             SoundEffectInstance_Resume_Hook.Apply();
             SoundEffectInstance_Stop_Hook.Apply();
 
+            // Other mods that implement certain custom audio filters may choose to force "high performance mode" to be active.
+            // High performance mode sacrifices a certain amount of memory overhead to cache all data for any songs that are currently playing,
+            // rather than utilizing buffered IO reading. This GREATLY improves performance for playback, and is all but necessary
+            // if any custom filters want to seek an underlying stream multiple times in rapid succession. Typically, memory overhead is
+            // not that large - usually ~50mb. However, there is no limit or accurate estimate for this number in every case, as
+            // tracks can be VERY long, and any number of tracks can be playing at a time. Thus, it is off by default. Although I would
+            // be very surprised if it ever even came remotely close to 1gb.
+            //
+            // As an alternative to forcing ALL tracks to be high performance, developers can register
+            // specific high performance tracks that they might expect certain filters to be added to. This is a good middle ground
+            // that ensures that filters which need high performance, but are only used in certain scenarios (like a boss fight),
+            // get that high performance, while all other tracks remain unaffected.
+            //
+            // Players can also opt to force high performance mode in the mod's configs.
+            //
+            // There is no method that is called before all mods are loaded, so we get around this by
+            // having developers mark their mods with the ForceHighPerformanceAttribute. These attributes
+            // are embedded into the mod class, so they will always be readable.
+            //
+            // This implementation *should* be suitable for most use cases, but if any arise
+            // where this is not (ex. dynamically determining whether high performance should be enabled),
+            // I will come back and implement a better solution.
+            bool anyModsWantHighPerformance = ModLoader.Mods.Any(mod => Attribute.GetCustomAttribute(mod.GetType(), typeof(ForceHighPerformanceAttribute)) is not null);
+            Config.ForceHighPerformance |= anyModsWantHighPerformance;
+
             // The MonoStereo source acts as a psuedo-texture pack. This allows us to directly
             // override the vanilla tracks, rather than needing custom scenes for every vanilla song.
             // We need this to override the vanilla wavebank reader.
@@ -138,6 +182,10 @@ namespace MonoStereoMod
             // This is not a detour, we need to unhook manually
             Main.instance.Exiting -= Instance_Exiting;
 
+            // Set this back to false just in case another mod has flagged "force high performance."
+            // I'm pretty sure this does nothing, as it should be reset by the next load regardless, but this is safety.
+            Config.ForceHighPerformance = false;
+
             // Clears all sound mappings, both for cached sounds and sound instances.
             SoundCache.Unload();
 
@@ -153,7 +201,7 @@ namespace MonoStereoMod
             system.UseSources(system.FileSources.RemoveMonoStereoSource());
         }
 
-        internal static void Instance_Exiting(object sender, System.EventArgs e) => ModRunning = false;
+        internal static void Instance_Exiting(object sender, EventArgs e) => ModRunning = false;
 
         #region API
 
@@ -164,13 +212,26 @@ namespace MonoStereoMod
         /// <returns>The <see cref="MonoStereoAudioTrack"/> associated with the music track at the specified index,<br/>
         /// or <see langword="null"/> if the track could not be resolved.</returns>
         public static MonoStereoAudioTrack GetSong(int musicIndex)
-            => Main.audioSystem is LegacyAudioSystem system ? system.AudioTracks[musicIndex] is MonoStereoAudioTrack track ? track : null : null;
+            => Main.audioSystem is LegacyAudioSystem system && system.AudioTracks[musicIndex] is MonoStereoAudioTrack track ? track : null;
+
+
+        /// <summary>
+        /// Replacement for <see cref="MusicLoader.AddMusic(Mod, string)"/> that allows you to utilize your own <see cref="ISongSource"/> implementation,<br/>
+        /// instead of being forced to only use file readers.<br/><br/>
+        /// </summary>
+        /// <param name="mod">The <see cref="Mod"/> that is adding this custom music.</param>
+        /// <param name="musicName">The name to associate with the custom music.<br/>
+        /// You will use this for <see cref="MusicLoader.GetMusic(Mod, string)"/> and <see cref="MusicLoader.GetMusicSlot(Mod, string)"/></param>
+        /// <param name="source">The custom song source you want to register.</param>
+        public static void AddCustomMusic(Mod mod, string musicName, ISongSource source)
+            => AddCustomMusic(mod, musicName, new MonoStereoAudioTrack(source));
+
 
         /// <summary>
         /// Replacement for <see cref="MusicLoader.AddMusic(Mod, string)"/> that allows you to utilize your own <see cref="Song"/> implementation,<br/>
         /// instead of being forced to only use file readers.<br/><br/>
-        /// You can inherit from <see cref="MonoStereoAudioTrack"/> if you want extra properties/methods,<br/>
-        /// but you should be fine with simply creating a custom <see cref="ISongSource"/> implementation and using <see langword="new"/> <see cref="MonoStereoAudioTrack"/>(<see cref="ISongSource"/>)
+        /// In most cases, you should be fine with simply creating a custom <see cref="ISongSource"/> and using <see cref="AddCustomMusic(Mod, string, ISongSource)"/> instead.<br/>
+        /// However, in cases where you need more control wrapping that source, you can inherit from <see cref="MonoStereoAudioTrack"/> and add extra properties/methods.
         /// </summary>
         /// <param name="mod">The <see cref="Mod"/> that is adding this custom music.</param>
         /// <param name="musicName">The name to associate with the custom music.<br/>
@@ -182,15 +243,47 @@ namespace MonoStereoMod
             if (!mod.IsLoading())
                 throw new Exception($"{nameof(AddCustomMusic)} can only be called during mod loading.");
 
-            // Reserve a music slot, and attach the mod name to the path.
-            int id = ReserveMusicLoaderID();
-            musicName = $"{mod.Name}/{musicName}";
+            string musicPath = $"{mod.Name}/{musicName}";
+            SoundCache.CustomMusicSlots[musicPath] = track;
 
-            // Sets MusicLoader.musicByPath (for use by MusicLoader.GetMusic()) as well as
-            // MusicLoader.musicExtensions (for use to determine loading from our own cache)
-            MusicLoaderMusicByPath()[musicName] = id;
-            MusicLoaderMusicExtensions()[musicName] = ".monostereo";
+            RegisterCustomMusic(musicPath, ".monostereo");
         }
+
+
+        /// <summary>
+        /// Alternative to <see cref="MusicLoader.AddMusic(Mod, string)"/> which allows you to force a certain track to be "high performance."<br/><br/>
+        /// High performance tracks have all of their data cached to memory while they are being played,
+        /// which drastically improves performance, at the cost of some extra memory overhead.<br/>
+        /// This allows for certain filters to be possible that weren't before (particularly, filters that rapidly seek underlying streams).
+        /// </summary>
+        /// <param name="mod">The <see cref="Mod"/> that is adding this music.</param>
+        /// <param name="musicPath">The name to associate with the custom music.<br/>
+        /// You will use this for <see cref="MusicLoader.GetMusic(Mod, string)"/> and <see cref="MusicLoader.GetMusicSlot(Mod, string)"/></param>
+        public static void AddHighPerformanceMusic(Mod mod, string musicPath)
+        {
+            // This can only be called during mod loading.
+            if (!mod.IsLoading())
+                throw new Exception($"{nameof(AddHighPerformanceMusic)} can only be called during mod loading.");
+
+            // Locate the base extension for the supplied file path.
+            string chosenExtension = "";
+            string[] supportedExtensions = MusicLoaderSupportedExtensions();
+
+            foreach (string extension in supportedExtensions.Where(extension => mod.FileExists(musicPath + extension)))
+                chosenExtension = extension;
+
+            // If no file was found with a supported extension, throw
+            if (string.IsNullOrEmpty(chosenExtension))
+                throw new ArgumentException($"Given path found no files matching the extensions [ {string.Join(", ", supportedExtensions)} ]");
+
+            // Replace the . in the extension with a new prefix that denotes
+            // that this track should be high performance.
+            string fileExtension = chosenExtension.Replace(".", HighPerformanceExtensionPrefix);
+            musicPath = $"{mod.Name}/{musicPath}";
+
+            RegisterCustomMusic(musicPath, fileExtension);
+        }
+
 
         /// <summary>
         /// Attempts to get the <see cref="MonoStereoSoundEffect"/> associated with the sound at the specified <paramref name="slotId"/>
@@ -220,6 +313,7 @@ namespace MonoStereoMod
                 && activeSound.Sound is not null
                 && SoundCache.TryGetMonoStereo(activeSound.Sound, out sound);
         }
+
 
         /// <summary>
         /// Plays a sound and returns the associated <see cref="MonoStereoSoundEffect"/>

@@ -1,6 +1,6 @@
 ﻿using MonoStereo;
 using MonoStereo.Filters;
-using MonoStereoMod.Audio.Structures;
+using MonoStereoMod.Audio;
 using NAudio.Dsp;
 using System;
 

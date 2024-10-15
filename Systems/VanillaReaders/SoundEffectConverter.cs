@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
-namespace MonoStereoMod.Systems.VanillaReaders
+namespace MonoStereoMod.Systems
 {
     internal static class SoundEffectConverter
     {

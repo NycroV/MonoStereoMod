@@ -11,6 +11,7 @@ using System.IO;
 using System.Linq;
 using Terraria;
 using Terraria.Localization;
+using Terraria.ModLoader;
 using Terraria.ModLoader.Exceptions;
 
 namespace MonoStereoMod.Utils
@@ -169,6 +170,18 @@ namespace MonoStereoMod.Utils
             float volume = MathF.Pow(10f, exponent);
             float naturalEndFadeout = Terraria.Utils.GetLerpValue(0f, 0.074f, value, true);
             return volume * naturalEndFadeout;
+        }
+
+        // Registers custom music
+        public static void RegisterCustomMusic(string musicPath, string extension)
+        {
+            // Reserve a music slot, and attach the mod name to the path.
+            int id = ReserveMusicLoaderID();
+
+            // Sets MusicLoader.musicByPath (for use by MusicLoader.GetMusic()) as well as
+            // MusicLoader.musicExtensions (for use to determine loading from our own cache)
+            MusicLoaderMusicByPath()[musicPath] = id;
+            MusicLoaderMusicExtensions()[musicPath] = extension;
         }
 
         #endregion

@@ -2,7 +2,6 @@
 using MonoStereo.AudioSources;
 using MonoStereo.AudioSources.Songs;
 using MonoStereoMod.Audio;
-using MonoStereoMod.Audio.Reading;
 using ReLogic.Content.Sources;
 using System.Collections.Generic;
 using Terraria;
@@ -47,7 +46,10 @@ namespace MonoStereoMod.Detours
                     };
 
                     if (source != null)
-                        return new MonoStereoAudioTrack(new BufferedSongReader(source, 2f));
+                    {
+                        ISongSource reader = MonoStereoMod.Config.ForceHighPerformance ? new HighPerformanceSongSource(source) : new BufferedSongReader(source, 2f);
+                        return new MonoStereoAudioTrack(reader);
+                    }
                 }
                 catch
                 {

@@ -5,7 +5,7 @@ using NAudio.Wave;
 using System.Collections.Generic;
 using System.IO;
 
-namespace MonoStereoMod.Audio.Reading
+namespace MonoStereoMod.Audio
 {
     internal class Mp3SongSource : ITerrariaSongSource
     {
