@@ -57,6 +57,7 @@ namespace MonoStereoMod
                 musicVolume: Main.musicVolume,
                 soundEffectVolume: Main.soundVolume);
 
+        // Start the engine and detour TML/FNA to use our engine instead
         public override void Load()
         {
             ModRunning = true;
@@ -74,8 +75,8 @@ namespace MonoStereoMod
 
             On_LegacyAudioSystem.Update += On_LegacyAudioSystem_Update; // Updates master volume controls
             On_LegacyAudioSystem.FindReplacementTrack += On_LegacyAudioSystem_FindReplacementTrack; // Use MonoStereo tracks instead of vanilla
-            On_LegacyAudioSystem.PauseAll += On_LegacyAudioSystem_PauseAll; // Also call pause on master outputs
-            On_LegacyAudioSystem.ResumeAll += On_LegacyAudioSystem_ResumeAll; // Also call resume on master outputs
+            On_LegacyAudioSystem.PauseAll += On_LegacyAudioSystem_PauseAll; // Also call pause on master outputs (performance)
+            On_LegacyAudioSystem.ResumeAll += On_LegacyAudioSystem_ResumeAll; // Also call resume on master outputs (performance)
 
             MusicLoader_LoadMusic_Hook = new(MusicLoader_LoadMusic_Method, On_MusicLoader_LoadMusic); // Use MonoStereo tracks instead of vanilla
 
@@ -126,7 +127,7 @@ namespace MonoStereoMod
             system.UseSources(system.FileSources.InsertMonoStereoSource());
 
             // This ensures that all music tracks that have already been
-            // loadedare reloaded to use MonoStereo sources.
+            // loaded are reloaded to use MonoStereo sources.
             LoaderManager.Get<MusicLoader>().ResizeArrays();
         }
 

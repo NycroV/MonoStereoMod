@@ -22,6 +22,11 @@ namespace MonoStereoMod
         private readonly WdlResampler resampler = new();
 
         public float Panning { get; set; }
+
+        // Init to NaN to force resample prep
+        private float _pitch = float.NaN;
+        private float _rate = float.NaN;
+
         public float PitchFactor
         {
             get
@@ -41,10 +46,6 @@ namespace MonoStereoMod
             }
         }
 
-        // Init to NaN to force resample prep
-        private float _pitch = float.NaN;
-        private float _rate = float.NaN;
-
         public override void PostProcess(float[] buffer, int offset, int samplesRead)
         {
             if (Panning != 0f)
@@ -57,13 +58,18 @@ namespace MonoStereoMod
             // AND the source is not a TerrariaCachedSoundEffectReader. This is because the Terraria reader
             // resamples the data in its entirety whenever pitch is changed to help reduce
             // artifacts when placing resampled buffers end to end (in some scenarios).
+            //
+            // This should be investigated to figure out where those artifacts are coming from.
+            // Performance? WinMM? I have no idea, but this system works for now. I'll try to
+            // find the exact cause and fix it if possible in the near future. Live resampling
+            // would be much easier, not to mention more intuitive.
 
             if (_rate != 1f && (Source is not MonoStereoSoundEffect effect || effect.Source is not TerrariaCachedSoundEffectReader))
             {
                 int framesRequested = count / AudioStandards.ChannelCount;
                 int inNeeded = resampler.ResamplePrepare(framesRequested, AudioStandards.ChannelCount, out float[] inBuffer, out int inBufferOffset);
 
-                int inAvailable = Provider.Read(inBuffer, inBufferOffset, inNeeded * AudioStandards.ChannelCount) / AudioStandards.ChannelCount;
+                int inAvailable = base.ModifyRead(inBuffer, inBufferOffset, inNeeded * AudioStandards.ChannelCount) / AudioStandards.ChannelCount;
                 int outAvailable = resampler.ResampleOut(buffer, offset, inAvailable, framesRequested, AudioStandards.ChannelCount);
 
                 return outAvailable * AudioStandards.ChannelCount;
