@@ -43,12 +43,12 @@ namespace MonoStereoMod.Systems
 
         #endregion
 
-        public WaveBankCue(BinaryReader reader, WaveFormat waveFormat, string name, long offset, long length, long loopStart, long loopEnd)
+        public WaveBankCue(BinaryReader reader, WaveFormat waveFormat, string name, long offset, long sourceLength, long sampleLength, long loopStart, long loopEnd)
         {
             Name = name;
             Reader = reader;
             Offset = offset;
-            SourceLength = length;
+            SourceLength = sourceLength;
             LoopStart = loopStart;
             LoopEnd = loopEnd;
             IsLoaded = false;
@@ -58,11 +58,13 @@ namespace MonoStereoMod.Systems
 
             if (waveFormat.Encoding == WaveFormatEncoding.Adpcm)
             {
-                // 16 bits or 2 byte samples
+                // 2 byte samples (16 bit pcm)
                 int blockAlign = 2 * waveFormat.Channels;
-                WaveFormat = WaveFormat.CreateCustomFormat(WaveFormatEncoding.Pcm, waveFormat.SampleRate, waveFormat.Channels, waveFormat.SampleRate * blockAlign, blockAlign, 16);
+                WaveFormat = WaveFormat.CreateCustomFormat(WaveFormatEncoding.Pcm, waveFormat.SampleRate, waveFormat.Channels, waveFormat.SampleRate * blockAlign, blockAlign, blockAlign * 8 / waveFormat.Channels);
                 Adpcm = true;
             }
+
+            Length = sampleLength * WaveFormat.BlockAlign;
         }
 
         internal void Load()
@@ -77,7 +79,7 @@ namespace MonoStereoMod.Systems
             if (Adpcm)
                 buffer = ConvertMsAdpcmToPcm(buffer, 0, buffer.Length, WaveFormat.Channels, (SourceFormat.BlockAlign + 22) * WaveFormat.Channels);
 
-            Length = buffer.LongLength;
+            Length = buffer.Length;
             Buffer = buffer;
             IsLoaded = true;
         }

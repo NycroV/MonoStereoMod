@@ -24,10 +24,22 @@ namespace MonoStereoMod.Audio
             }
 
             source = readerStream.ToSampleProvider().Reformat(ref loopStart, ref loopEnd);
-            Length = readerStream.Length / readerStream.BlockAlign * source.WaveFormat.Channels;
 
             LoopStart = loopStart;
             LoopEnd = loopEnd;
+
+            long sampleLength = readerStream.Length / readerStream.WaveFormat.BlockAlign * readerStream.WaveFormat.Channels;
+
+            if (readerStream.WaveFormat.SampleRate != WaveFormat.SampleRate)
+            {
+                sampleLength = (long)((float)sampleLength / readerStream.WaveFormat.SampleRate * WaveFormat.SampleRate);
+                sampleLength -= (sampleLength % WaveFormat.Channels);
+            }
+
+            if (readerStream.WaveFormat.Channels != WaveFormat.Channels)
+                sampleLength *= AudioStandards.ChannelCount;
+
+            Length = sampleLength;
         }
 
         public string FileName { get; }
@@ -49,6 +61,42 @@ namespace MonoStereoMod.Audio
         public long LoopEnd { get; set; }
 
         public long Position
+        {
+            get
+            {
+                long samplePos = SamplePosition;
+
+                if (readerStream.WaveFormat.SampleRate != WaveFormat.SampleRate)
+                {
+                    samplePos = (long)((float)samplePos / readerStream.WaveFormat.SampleRate * WaveFormat.SampleRate);
+                    samplePos -= (samplePos % WaveFormat.Channels);
+                }
+
+                if (readerStream.WaveFormat.Channels != WaveFormat.Channels)
+                    samplePos *= AudioStandards.ChannelCount;
+
+                return samplePos;
+            }
+
+            set
+            {
+                if (value != Position)
+                {
+                    if (readerStream.WaveFormat.SampleRate != WaveFormat.SampleRate)
+                    {
+                        value = (long)((float)value / WaveFormat.SampleRate * readerStream.WaveFormat.SampleRate);
+                        value -= (value % WaveFormat.Channels);
+                    }
+
+                    if (readerStream.WaveFormat.Channels != WaveFormat.Channels)
+                        value /= 2;
+
+                    SamplePosition = value;
+                }
+            }
+        }
+
+        private long SamplePosition
         {
             get => readerStream.Position / readerStream.BlockAlign * source.WaveFormat.Channels;
             set => readerStream.Position = value / source.WaveFormat.Channels * readerStream.BlockAlign;

@@ -1,8 +1,11 @@
-﻿using MonoStereo.AudioSources;
+﻿using MonoStereo;
+using MonoStereo.AudioSources;
 using MonoStereo.SampleProviders;
 using NAudio.Wave;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Threading;
 
 namespace MonoStereoMod.Audio
 {
@@ -11,6 +14,7 @@ namespace MonoStereoMod.Audio
         public HighPerformanceSongSource(ITerrariaSongSource source)
         {
             Source = source;
+            Audio = new(source);
 
             IsLooped = source.IsLooped;
             source.IsLooped = false;
@@ -20,8 +24,6 @@ namespace MonoStereoMod.Audio
 
             LoopStart = source.LoopStart;
             LoopEnd = source.LoopEnd;
-
-            Audio = new(source);
         }
 
         private readonly ITerrariaSongSource Source;
@@ -64,14 +66,18 @@ namespace MonoStereoMod.Audio
 
             public long Position { get; set; } = 0L;
 
+            private long SamplesCached = 0;
+
+            private int WriteIndex = 0;
+
             public bool IsLoaded { get; set; } = false;
 
             public int Read(float[] buffer, int offset, int count)
             {
                 long samplesAvailable = Length - Position;
                 int samplesToCopy = Math.Min((int)samplesAvailable, count);
-                Array.Copy(AudioData, Position, buffer, offset, samplesToCopy);
 
+                Array.Copy(AudioData, Position, buffer, offset, samplesToCopy);
                 Position += samplesToCopy;
 
                 return samplesToCopy;
@@ -79,12 +85,58 @@ namespace MonoStereoMod.Audio
 
             public void Load()
             {
-                Source.Position = 0;
+                Source.Position = Position;
                 AudioData = new float[Source.Length];
-                Source.Read(AudioData, 0, AudioData.Length);
+
+                // Read one second of data into memory right now.
+                // We will offload the rest of the reading to a separate thread so that playback
+                // isn't halted by this expensive IO operation.
+                SamplesCached = Source.Read(AudioData, (int)Position, (int)Math.Min(AudioStandards.SampleRate * AudioStandards.ChannelCount, Length - Position));
+                WriteIndex = (int)(Position + SamplesCached);
+
+                IsLoaded = true;
+
+                ThreadPool.QueueUserWorkItem(new(sender =>
+                {
+                    // The song cache is passed to this WaitCallback.
+                    SongCache audio = sender as SongCache;
+                    ITerrariaSongSource source = audio.Source;
+
+                    while (audio.SamplesCached < audio.Length)
+                    {
+                        // Attempt to cache 5 seconds at a time...
+                        int count = AudioStandards.SampleRate * AudioStandards.ChannelCount * 5;
+
+                        // But only cache enough samples to reach the end of the stream...
+                        int samplesAvailable = (int)Math.Min(count, audio.Length - audio.WriteIndex);
+                        
+                        // And even less than that if we've already cached everything else.
+                        int samplesToCache = (int)Math.Min(samplesAvailable, audio.Length - audio.SamplesCached);
+
+                        // Read the data to the cache buffer.
+                        int cached = source.Read(audio.AudioData, audio.WriteIndex, samplesToCache);
+                        audio.SamplesCached += cached;
+                        audio.WriteIndex += cached;
+
+                        // If we reached the end of the stream, circle back to the beginning to cache
+                        // any data that we might have skipped over by starting the read halfway through.
+                        if (audio.WriteIndex == audio.Length)
+                        {
+                            audio.WriteIndex = 0;
+                            source.Position = 0;
+                        }
+                    }
+                }),
+                this);
             }
 
-            public void Unload() => AudioData = null;
+            public void Unload()
+            {
+                AudioData = null;
+                SamplesCached = 0;
+                WriteIndex = 0;
+                IsLoaded = false;
+            }
 
             public void Dispose()
             {

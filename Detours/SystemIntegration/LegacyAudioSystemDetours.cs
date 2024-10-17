@@ -47,6 +47,10 @@ namespace MonoStereoMod.Detours
 
                     if (source != null)
                     {
+                        // Cues are always "high performance" due to Adpcm encoding being freaky
+                        if (source is CueSongSource)
+                            return new MonoStereoAudioTrack(source);
+
                         ISongSource reader = MonoStereoMod.Config.ForceHighPerformance ? new HighPerformanceSongSource(source) : BufferedSongReader.Create(source, 2f);
                         return new MonoStereoAudioTrack(reader);
                     }

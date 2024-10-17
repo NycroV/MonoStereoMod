@@ -41,13 +41,13 @@ namespace MonoStereoMod
             //
             // For some reason, including references to most tMod types does not cause problems, but
             // including the config class causes ILRepack to require a reference to tModLoader.dll,
-            // when it otherwise wouldn't. Possible because of the property attributes? Not 100% sure.
+            // when it otherwise wouldn't. Possibly because of the property attributes? Not 100% sure.
 
             public static int Latency { get; internal set; } = 150;
             public static int BufferCount { get; internal set; } = 8;
+            public static bool ForceHighPerformance { get; internal set; } = false;
             public static int DeviceNumber { get; internal set; } = -1;
             public static string DeviceDisplayName { get => HighPriorityWaveOutEvent.GetCapabilities(DeviceNumber).ProductName; }
-            public static bool ForceHighPerformance { get; internal set; } = false;
 
             // Applies config changes to the output
             internal static void ResetOutput(int? latency = null, int? bufferCount = null, int? deviceNumber = null)

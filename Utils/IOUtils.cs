@@ -87,7 +87,7 @@ namespace MonoStereoMod.Utils
                 uint loopStartSample = reader.ReadUInt32();
                 uint loopEndSample = reader.ReadUInt32() + loopStartSample;
 
-                uint bitsPerSample = (format >> 31) & 0x1; // Yes, this is only 1 byte
+                uint bitsPerSample = (format >> 31) & 0x1; // Yes, this is only 1 bit
                 uint blockAlign = (format >> 23) & 0xFF;  // 8 bytes
                 uint sampleRate = /*(format >> 5) & 0x7FFFF; // 18 bytes*/ 44100; // For some reason, some vanilla tracks are 44,101 or 44,099. I don't know. They're all supposed to be 44.1 kHz.
                 uint channels = (format >> 2) & 0x7; // 3 bytes
@@ -108,7 +108,7 @@ namespace MonoStereoMod.Utils
                 long loopEnd = loopEndSample > 0 && loopEndSample != numSamples ? loopEndSample : -1L;
 
                 reader.BaseStream.Seek(streamOffset, SeekOrigin.Begin);
-                WaveBankCue cue = new(reader, waveFormat, name, streamOffset, streamSize, loopStart, loopEnd);
+                WaveBankCue cue = new(reader, waveFormat, name, streamOffset, streamSize, numSamples, loopStart, loopEnd);
                 cues.Add(cue);
             }
 

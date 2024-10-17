@@ -21,15 +21,41 @@ namespace MonoStereoMod.Audio
 
         public PlaybackState PlaybackState { get; set; } = PlaybackState.Stopped;
 
-        public long Length => OggReader.Length;
+        public long Length { get; }
 
         public long Position
         {
-            get => OggReader.Position;
+            get
+            {
+                long samplePos = OggReader.Position;
+
+                if (OggReader.WaveFormat.SampleRate != WaveFormat.SampleRate)
+                {
+                    samplePos = (long)((float)samplePos / OggReader.WaveFormat.SampleRate * WaveFormat.SampleRate);
+                    samplePos -= (samplePos % WaveFormat.Channels);
+                }
+
+                if (OggReader.WaveFormat.Channels != WaveFormat.Channels)
+                    samplePos *= AudioStandards.ChannelCount;
+
+                return samplePos;
+            }
+
             set
             {
-                if (value != OggReader.Position)
+                if (value != Position)
+                {
+                    if (OggReader.WaveFormat.SampleRate != WaveFormat.SampleRate)
+                    {
+                        value = (long)((float)value / WaveFormat.SampleRate * OggReader.WaveFormat.SampleRate);
+                        value -= (value % WaveFormat.Channels);
+                    }
+
+                    if (OggReader.WaveFormat.Channels != WaveFormat.Channels)
+                        value /= 2;
+
                     OggReader.Position = value;
+                }
             }
         }
 
@@ -58,6 +84,19 @@ namespace MonoStereoMod.Audio
             int sampleCount = AudioStandards.SampleRate / 1000 * MonoStereoMod.Config.Latency * AudioStandards.ChannelCount;
             Provider.Read(new float[sampleCount], 0, sampleCount);
             Position = 0;
+
+            long sampleLength = OggReader.Length;
+
+            if (OggReader.WaveFormat.SampleRate != WaveFormat.SampleRate)
+            {
+                sampleLength = (long)((float)sampleLength / OggReader.WaveFormat.SampleRate * WaveFormat.SampleRate);
+                sampleLength -= (sampleLength % WaveFormat.Channels);
+            }
+
+            if (OggReader.WaveFormat.Channels != WaveFormat.Channels)
+                sampleLength *= AudioStandards.ChannelCount;
+
+            Length = sampleLength;
         }
 
         public int Read(float[] buffer, int offset, int count) => Provider.LoopedRead(buffer, offset, count, this, IsLooped, Length, LoopStart, LoopEnd);
