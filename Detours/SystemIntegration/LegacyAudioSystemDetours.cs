@@ -36,7 +36,7 @@ namespace MonoStereoMod.Detours
 
                 try
                 {
-                    ISongSource source = extension switch
+                    ITerrariaSongSource source = extension switch
                     {
                         ".ogg" => new OggSongSource(contentSource.OpenStream(assetPathWithExtension), assetPathWithExtension),
                         ".wav" => new WavSongSource(contentSource.OpenStream(assetPathWithExtension), assetPathWithExtension),
@@ -47,7 +47,7 @@ namespace MonoStereoMod.Detours
 
                     if (source != null)
                     {
-                        ISongSource reader = MonoStereoMod.Config.ForceHighPerformance ? new HighPerformanceSongSource(source) : new BufferedSongReader(source, 2f);
+                        ISongSource reader = MonoStereoMod.Config.ForceHighPerformance ? new HighPerformanceSongSource(source) : BufferedSongReader.Create(source, 2f);
                         return new MonoStereoAudioTrack(reader);
                     }
                 }

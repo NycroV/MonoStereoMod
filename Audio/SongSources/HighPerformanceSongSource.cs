@@ -1,41 +1,96 @@
 ﻿using MonoStereo.AudioSources;
+using MonoStereo.SampleProviders;
 using NAudio.Wave;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MonoStereoMod.Audio
 {
     internal class HighPerformanceSongSource : ITerrariaSongSource
     {
-        public HighPerformanceSongSource(ISongSource source)
+        public HighPerformanceSongSource(ITerrariaSongSource source)
         {
+            Source = source;
 
+            IsLooped = source.IsLooped;
+            source.IsLooped = false;
+
+            Position = source.Position;
+            source.Position = 0;
+
+            LoopStart = source.LoopStart;
+            LoopEnd = source.LoopEnd;
+
+            Audio = new(source);
         }
 
-        public long LoopStart { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-        public long LoopEnd { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-        public PlaybackState PlaybackState { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        private readonly ITerrariaSongSource Source;
+        public ISongSource BaseSource => Source;
 
-        public Dictionary<string, string> Comments => throw new NotImplementedException();
+        public long LoopStart { get; }
+        public long LoopEnd { get; }
+        public PlaybackState PlaybackState { get; set; } = PlaybackState.Stopped;
 
-        public bool IsLooped { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-        public long Position { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public SongCache Audio { get; }
+        public Dictionary<string, string> Comments => Source.Comments;
 
-        public long Length => throw new NotImplementedException();
+        public bool IsLooped { get; set; }
+        public long Position { get => Audio.Position; set => Audio.Position = value; }
 
-        public WaveFormat WaveFormat => throw new NotImplementedException();
+        public long Length => Audio.Length;
+        public WaveFormat WaveFormat { get; }
 
-        public void Close()
-        {
-            throw new NotImplementedException();
-        }
+        public void Close() => Audio.Dispose();
+
+        public void OnStop() => Audio.Unload();
 
         public int Read(float[] buffer, int offset, int count)
         {
-            throw new NotImplementedException();
+            if (!Audio.IsLoaded)
+                Audio.Load();
+
+            return Audio.LoopedRead(buffer, offset, count, this, IsLooped, Length, LoopStart, LoopEnd);
+        }
+
+        public class SongCache(ITerrariaSongSource source) : ISampleProvider, ISeekable
+        {
+            public float[] AudioData = null;
+
+            public ITerrariaSongSource Source = source;
+
+            public WaveFormat WaveFormat { get; } = source.WaveFormat;
+
+            public long Length { get; } = source.Length;
+
+            public long Position { get; set; } = 0L;
+
+            public bool IsLoaded { get; set; } = false;
+
+            public int Read(float[] buffer, int offset, int count)
+            {
+                long samplesAvailable = Length - Position;
+                int samplesToCopy = Math.Min((int)samplesAvailable, count);
+                Array.Copy(AudioData, Position, buffer, offset, samplesToCopy);
+
+                Position += samplesToCopy;
+
+                return samplesToCopy;
+            }
+
+            public void Load()
+            {
+                Source.Position = 0;
+                AudioData = new float[Source.Length];
+                Source.Read(AudioData, 0, AudioData.Length);
+            }
+
+            public void Unload() => AudioData = null;
+
+            public void Dispose()
+            {
+                Unload();
+                Source.Close();
+            }
         }
     }
 }

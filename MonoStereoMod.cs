@@ -143,7 +143,7 @@ namespace MonoStereoMod
             // Other mods that implement certain custom audio filters may choose to force "high performance mode" to be active.
             // High performance mode sacrifices a certain amount of memory overhead to cache all data for any songs that are currently playing,
             // rather than utilizing buffered IO reading. This GREATLY improves performance for playback, and is all but necessary
-            // if any custom filters want to seek an underlying stream multiple times in rapid succession. Typically, memory overhead is
+            // if any custom filters want to seek an underlying stream multiple times in rapid succession. Typically, this memory overhead is
             // not that large - usually ~50mb. However, there is no limit or accurate estimate for this number in every case, as
             // tracks can be VERY long, and any number of tracks can be playing at a time. Thus, it is off by default. Although I would
             // be very surprised if it ever even came remotely close to 1gb.

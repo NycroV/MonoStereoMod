@@ -1,4 +1,5 @@
-﻿using MonoStereo.AudioSources;
+﻿using MonoStereo;
+using MonoStereo.AudioSources;
 using MonoStereo.AudioSources.Songs;
 using MonoStereo.Filters;
 using MonoStereo.SampleProviders;
@@ -14,6 +15,13 @@ namespace MonoStereoMod.Testing
     {
         // Apply first as we are going to directly seek the audio in some cases
         public override FilterPriority Priority => FilterPriority.ApplyFirst;
+        
+        // Shorthand for fetching the source as a song.
+        // This is utilized safely.
+        public Song SongSource => Source as Song;
+
+        // Same as above.
+        public ISeekable SeekableSource => SongSource.Source as ISeekable;
 
         /// <summary>
         /// If this is true, the recorded audio will be played back in reverse.<br/>
@@ -40,8 +48,10 @@ namespace MonoStereoMod.Testing
                     kvp.Value.Reverse();
                     kvp.Value.Reversing = value;
 
-                    // Seek to the current position, accounting for how many samples are recorded
-                    kvp.Key.Position = kvp.Value.RecordingStart + kvp.Value.Buffer.Count;
+                    // Seek to the current position, accounting for how many samples are recorded.
+                    // This filter is only applied when the provider is a song, and the
+                    // song's source is seekable - so we know this is safe to do.
+                    ((kvp.Key as Song).Source as ISeekable).Position = kvp.Value.RecordingStart + kvp.Value.Buffer.Count;
                 }
 
                 reversing = value;
@@ -52,20 +62,7 @@ namespace MonoStereoMod.Testing
 
         // The ReversableRecording collection represents the
         // cached samples for all of the sources this filter is applied to.
-        private readonly Dictionary<ISeekableSampleProvider, ReversableRecording> RecordedBuffers = [];
-
-        // This allows access to specific reversable recordings for outside modification
-        // Ex: only reversing certain sources
-        public ReversableRecording this[ISeekableSampleProvider provider]
-        {
-            get
-            {
-                if (GetRecording(provider, out var recording))
-                    return recording;
-
-                return null;
-            }
-        }
+        private readonly Dictionary<MonoStereoProvider, ReversableRecording> RecordedBuffers = [];
 
         /// <summary>
         /// This class is only intended to be used with the <see cref="ReverseFilter"/><br/>
@@ -96,9 +93,9 @@ namespace MonoStereoMod.Testing
         }
 
         // This is basically just a RecordedBuffers.TryGet() with some extra null safety
-        private bool GetRecording(out ReversableRecording recording) => GetRecording(Source is ISeekableSampleProvider seeker ? seeker : null, out recording);
+        private bool GetRecording(out ReversableRecording recording) => GetRecording(Source, out recording);
 
-        private bool GetRecording(ISeekableSampleProvider sampleProvider, out ReversableRecording recording)
+        private bool GetRecording(MonoStereoProvider sampleProvider, out ReversableRecording recording)
         {
             if (RecordedBuffers.TryGetValue(sampleProvider, out var foundRecording))
                 recording = foundRecording;
@@ -109,28 +106,29 @@ namespace MonoStereoMod.Testing
             return recording is not null;
         }
 
-        // Ensure an entry exists whenever this filter is applied
+        // Ensure an entry exists whenever this filter is applied, but
+        // if and ONLY if the song's source is seekable. Reversing would
+        // be far less effective if it is not seekable.
         public override void Apply(MonoStereoProvider provider)
         {
-            if (provider is not ISeekableSampleProvider seekable || RecordedBuffers.ContainsKey(seekable))
-                return;
-
-            RecordedBuffers.Add(seekable, new());
+            if (provider is Song song && song.Source is ISeekable)
+                RecordedBuffers.Add(provider, new());
         }
 
         // Whenever this filter is removed from a source, we no longer
         // need to keep track of cached samples for that source
         public override void Unapply(MonoStereoProvider provider)
         {
-            if (provider is not ISeekableSampleProvider seekable)
-                return;
-
             // Ensure that we have an entry for this source
-            if (!GetRecording(out var recording))
+            if (!GetRecording(provider, out var recording))
                 return;
 
-            RecordedBuffers.Remove(seekable);
-            seekable.Position = recording.RecordingStart + recording.Buffer.Count;
+            RecordedBuffers.Remove(provider);
+
+            // Make sure to seek to wherever we finished reading last.
+            // This filter is only applied when the provider is a song, and the
+            // song's source is seekable - so we know this is safe to do.
+            ((provider as Song).Source as ISeekable).Position = recording.RecordingStart + recording.Buffer.Count;
         }
 
         public override void PostProcess(float[] buffer, int offset, int samplesRead)
@@ -157,9 +155,12 @@ namespace MonoStereoMod.Testing
             if (!GetRecording(out var recording))
                 return base.ModifyRead(buffer, offset, count);
 
+            // Cache the seek source to prevent multiple unnecessary casts.
+            ISeekable seekSource = SeekableSource;
+
             // Mark the start of the recording
             if (recording.RecordingStart == -1)
-                recording.RecordingStart = (Source as ISeekableSampleProvider).Position;
+                recording.RecordingStart = seekSource.Position;
 
             // If we are not actively reversing, don't modify how the reading happens
             if (!recording.Reversing)
@@ -199,36 +200,25 @@ namespace MonoStereoMod.Testing
             // we know that this filter will only be applied to one of the mod's song sources.
             // (All of the mod's sources are loopable by default.)
             //
-            // If you want, you can also make this account for `ISeekableSampleProvider`s, and just have the position default
+            // If you want, you can also make this account for `ISeekable`s, and just have the position default
             // to 0 or do a sort of fake loop by seeking backwards from Length - although, again, in our context, it's
-            // pretty safe to assume the source will be a song.
-            MonoStereoAudioTrack seekSource = null;
-            ITerrariaSongSource loopSource = null;
+            // pretty safe to assume the source will be a loopable song.
+            Song songSource = SongSource;
+            ILoopTags loopSource = null;
 
-            if (Source is MonoStereoAudioTrack track)
-            {
-                seekSource = track;
-
-                // Although all of the default song sources actually use BufferedReaders,
-                // it is possible that another modder may have implemented their own
-                // source that doesn't. We check both cases to be safe.
-                if (track.Source is ITerrariaSongSource source)
-                    loopSource = source;
-
-                else if (track.Source is BufferedSongReader bufferedReader && bufferedReader.Source is ITerrariaSongSource bufferedSource)
-                    loopSource = bufferedSource;
-            }
-
-            // Alternatively, you can make this method return simply `samplesRead` instead of disabling reversal for this specific source.
-            // Be careful though - if samplesRead is 0, this will mark this source as ready for garbage collection.
-            if (seekSource is null || loopSource is null)
-            {
-                recording.Reversing = false;
-                return samplesRead + base.ModifyRead(buffer, offset, samplesRemaining);
-            }
+            // The BaseSource property is implemented on song sources that "wrap" other
+            // song sources, like the buffered reader. It points to the underlying source
+            // for access to source-specific info, but should NOT be used for modifying or
+            // otherwise interacting with the base source, as we want to respect any custom
+            // behavior of wrapping sources (like the buffered reader). If the source does not
+            // wrap another source, it instead points to itself.
+            if (SongSource.Source.BaseSource is ILoopTags source)
+                loopSource = source;
 
             // When we reverse audio, we want to take both loop start and end into account.
-            long startIndex = long.Max(loopSource.LoopStart, 0);
+            // If the source is not explicitly marked with loop tags, we default to the start
+            // and end of the track.
+            long startIndex = long.Max(loopSource?.LoopStart ?? -1, 0);
             long samplesAvailable = seekSource.Position - startIndex;
 
             // If this read is expected to cross over the beginning of the loop,
@@ -238,7 +228,7 @@ namespace MonoStereoMod.Testing
             {
                 long endIndex = seekSource.Length;
 
-                if (seekSource.IsLooped && loopSource.LoopEnd != -1)
+                if (songSource.IsLooped && (loopSource?.LoopEnd ?? -1) != -1)
                     endIndex = loopSource.LoopEnd;
 
                 seekSource.Position = endIndex - (samplesRemaining - samplesAvailable);

@@ -132,7 +132,7 @@ namespace MonoStereoMod.Utils
         // sampleProvider and seekSource are two different parameters, as
         // there is usually an underlying sampleProvider, but an encapsulating
         // class for containing the ability to seek.
-        public static int LoopedRead(this ISampleProvider sampleProvider, float[] buffer, int offset, int count, ISeekableSampleProvider seekSource, bool isLooped, long length, long loopStart, long loopEnd)
+        public static int LoopedRead(this ISampleProvider sampleProvider, float[] buffer, int offset, int count, ISeekable seekSource, bool isLooped, long length, long loopStart, long loopEnd)
         {
             int samplesCopied = 0;
 

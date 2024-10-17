@@ -34,8 +34,8 @@ Configs: {
 				Forces most song playback to use "high performance" mode.
 				This method of playback sacrifices some extra memory to increase playback performance with certain audio effects.
 
-				Usually, this takes up no more than 70mb of memory. However, this is not concrete, and if certain tracks are very long (>4 minutes),
-				or there are multiple tracks playing at one time, memory overhead can easily reach up to 200mb, or more.
+				Usually, this takes up no more than 50-70mb of memory. However, this is not concrete, and if certain tracks are very long (>4 minutes),
+				and/or there are multiple tracks playing at one time, memory overhead can easily reach up to 200mb, or more.
 
 				This option is disabled by default, but is recommended to turn on if you want increased audio performance at the cost of some memory overhead.
 				'''

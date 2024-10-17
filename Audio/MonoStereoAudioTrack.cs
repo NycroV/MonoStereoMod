@@ -62,7 +62,11 @@ namespace MonoStereoMod
             ClearFilters();
         }
 
-        public void Reuse() => Source.Position = 0L;
+        public void Reuse()
+        {
+            if (Source is ISeekableSongSource seekable)
+                seekable.Position = 0L;
+        }
 
         public void SetVariable(string variableName, float value)
         {

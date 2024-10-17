@@ -1,11 +1,9 @@
 ﻿
 // Add this to the same namespace as the normal ISongSource
+using MonoStereo.SampleProviders;
+
 namespace MonoStereo.AudioSources
 {
-    public interface ITerrariaSongSource : ISongSource
-    {
-        public long LoopStart { get; set; }
-
-        public long LoopEnd { get; set; }
-    }
+    public interface ITerrariaSongSource : ISeekableSongSource, ILoopTags
+    { }
 }
