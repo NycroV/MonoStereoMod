@@ -4,7 +4,6 @@ using MonoStereo.SampleProviders;
 using NAudio.Wave;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Threading;
 
 namespace MonoStereoMod.Audio
@@ -109,7 +108,7 @@ namespace MonoStereoMod.Audio
 
                         // But only cache enough samples to reach the end of the stream...
                         int samplesAvailable = (int)Math.Min(count, audio.Length - audio.WriteIndex);
-                        
+
                         // And even less than that if we've already cached everything else.
                         int samplesToCache = (int)Math.Min(samplesAvailable, audio.Length - audio.SamplesCached);
 

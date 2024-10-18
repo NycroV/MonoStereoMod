@@ -1,6 +1,5 @@
 ﻿using Microsoft.Xna.Framework.Audio;
 using MonoMod.RuntimeDetour;
-using MonoStereoMod.Audio;
 using MonoStereoMod.Systems;
 using System.Reflection;
 

@@ -8,10 +8,8 @@ using ReLogic.Content.Sources;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using Terraria;
 using Terraria.Localization;
-using Terraria.ModLoader;
 using Terraria.ModLoader.Exceptions;
 
 namespace MonoStereoMod.Utils
@@ -292,7 +290,7 @@ namespace MonoStereoMod.Utils
                 sampleCountLastBlock = (((count % blockAlignment) / channels) - 7) * 2 + 2;
 
             int sampleCount = ((count / blockAlignment) * sampleCountFullBlock) + sampleCountLastBlock;
-            var samples = new byte[sampleCount * sizeof(short) * channels];            
+            var samples = new byte[sampleCount * sizeof(short) * channels];
 
             while (count > 0)
             {

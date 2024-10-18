@@ -1,6 +1,4 @@
 ﻿using MonoStereo;
-using MonoStereo.AudioSources;
-using MonoStereo.AudioSources.Songs;
 using MonoStereo.Filters;
 using MonoStereo.SampleProviders;
 using NAudio.Utils;
@@ -15,7 +13,7 @@ namespace MonoStereoMod.Testing
     {
         // Apply first as we are going to directly seek the audio in some cases
         public override FilterPriority Priority => FilterPriority.ApplyFirst;
-        
+
         // Shorthand for fetching the source as a song.
         // This is utilized safely.
         public Song SongSource => Source as Song;

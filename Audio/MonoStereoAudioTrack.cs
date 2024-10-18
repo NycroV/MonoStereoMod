@@ -53,7 +53,7 @@ namespace MonoStereoMod
         public bool IsStopped => IsDisposed || PlaybackState == PlaybackState.Stopped;
 
         public bool IsDisposed { get; private set; } = false;
-        
+
         public void Stop(AudioStopOptions options) => Stop();
 
         public override void Stop()

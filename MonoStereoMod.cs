@@ -1,17 +1,18 @@
 global using static MonoStereoMod.Utils.MonoStereoUtils;
 using static MonoStereoMod.Detours.Detours;
+
 using Microsoft.Xna.Framework;
 using MonoStereo;
 using MonoStereo.AudioSources;
 using MonoStereo.Outputs;
 using MonoStereoMod.Systems;
+using MonoStereoMod.Utils;
 using ReLogic.Utilities;
+using System;
 using System.Linq;
 using Terraria;
 using Terraria.Audio;
 using Terraria.ModLoader;
-using System;
-using MonoStereoMod.Utils;
 
 namespace MonoStereoMod
 {

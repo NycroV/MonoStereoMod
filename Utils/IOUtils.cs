@@ -1,7 +1,5 @@
-﻿using Microsoft.Xna.Framework.Audio;
-using MonoStereoMod.Systems;
+﻿using MonoStereoMod.Systems;
 using NAudio.Wave;
-using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
