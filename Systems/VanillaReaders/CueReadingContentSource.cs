@@ -21,44 +21,47 @@ namespace MonoStereoMod.Systems
                 return;
 
             // Open the reader stream for the WaveBank file
-            string path = Main.instance.Content.GetPath("Wave Bank.xwb");
-            Stream cueBankStream = File.OpenRead(path);
-            BinaryReader reader = new(cueBankStream);
+            string waveBankPath = Main.instance.Content.GetPath("Wave Bank.xwb");
+            Stream waveBankStream = File.OpenRead(waveBankPath);
+            BinaryReader waveBankReader = new(waveBankStream);
 
             // Verify the header of the WaveBank file to make
             // sure we're actually reading what we're supposed to.
             var head = Encoding.ASCII.GetBytes("WBND");
-            var bytes = reader.ReadBytes(4);
+            var bytes = waveBankReader.ReadBytes(4);
 
             if (!head.SequenceEqual(bytes))
-                throw new ArgumentException("Could not parse XWB header!", nameof(cueBankStream));
+                throw new ArgumentException("Could not parse XWB header!", nameof(waveBankStream));
+
+            // Open the reader stream for the SoundBank file (file names)
+            string bankPath = Main.instance.Content.GetPath("Sound Bank.xsb");
+            Stream soundBankStream = File.OpenRead(bankPath);
+            BinaryReader soundBankReader = new(soundBankStream);
+
+            // Verify the header.
+            head = Encoding.ASCII.GetBytes("SDBK");
+            bytes = soundBankReader.ReadBytes(4);
+
+            if (!head.SequenceEqual(bytes))
+                throw new ArgumentException("Could not parse XSB header!", nameof(soundBankStream));
 
             // Yes, we do need readers for each individual track.
-            BinaryReader[] readers = new BinaryReader[Main.maxMusic];
-            readers[0] = reader;
+            // maxMusic is 92 - but there are only 91 actual tracks.
+            BinaryReader[] readers = new BinaryReader[Main.maxMusic - 1];
 
-            for (int i = 1; i < readers.Length; i++)
-                readers[i] = new BinaryReader(File.OpenRead(path));
+            for (int i = 0; i < readers.Length; i++)
+                readers[i] = new BinaryReader(File.OpenRead(waveBankPath));
 
             // Read the cues (tracks) from the WaveBank, and create a dictionary
             // from those entries that is indexed by track name.
-            Cues = ReadCues(readers, Main.audioSystem as LegacyAudioSystem).Select<WaveBankCue, KeyValuePair<string, WaveBankCue>>(cue => new("Music" + Path.DirectorySeparatorChar + cue.Name, cue)).ToDictionary();
+            Cues = ReadCues(waveBankReader, soundBankReader, readers, Main.audioSystem as LegacyAudioSystem).Select<WaveBankCue, KeyValuePair<string, WaveBankCue>>(cue => new("Music" + Path.DirectorySeparatorChar + cue.Name, cue)).ToDictionary();
 
             // Sets the asset names to include the file extension.
             SetAssetNames(Cues.Keys.Select(cue => cue + ".xwb"));
-            readers[0].Close();
 
-            // Impending doom approaches...
-            string music1 = $"Music{Path.DirectorySeparatorChar}Music_1";
-            string music3 = $"Music{Path.DirectorySeparatorChar}Music_3";
-
-            // I have absolutely ZERO clue why, but tracks 1 and 3 seem to be swapped.
-            // Like, seriously, I don't know how this isn't an issue in vanilla. The logic is IDENTICAL.
-            // If anyone has any ideas or answers, please, for the love of God, fix this.
-            //         |             |
-            //         V             V
-            (Cues[music1], Cues[music3]) =
-            (Cues[music3], Cues[music1]);
+            // Dispose info streams.
+            waveBankReader.Close();
+            soundBankReader.Close();
         }
 
         public override Stream OpenStream(string assetName) => new CueReader(Cues[assetName]);

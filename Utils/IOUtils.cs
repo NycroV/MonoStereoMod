@@ -1,7 +1,9 @@
-﻿using MonoStereoMod.Systems;
+﻿using Microsoft.Xna.Framework.Audio;
+using MonoStereoMod.Systems;
 using NAudio.Wave;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using Terraria;
 using Terraria.Audio;
@@ -37,44 +39,87 @@ namespace MonoStereoMod.Utils
         // WaveBanks in C# was already available in MonoGame. That was not a fun day.
         //
         // Reads a WaveBank file, and returns a list of all "cues" (tracks) contained within that bank.
-        internal static List<WaveBankCue> ReadCues(BinaryReader[] readers, LegacyAudioSystem loadedSystem)
+        internal static List<WaveBankCue> ReadCues(BinaryReader waveBankReader, BinaryReader soundBankReader, BinaryReader[] cueReaders, LegacyAudioSystem loadedSystem)
         {
-            BinaryReader reader = readers[0];
-            int version = reader.ReadInt32(); // 46 - XACT 3.0
-            int headerVersion = reader.ReadInt32();
+            #region Wave Bank Parsing
 
-            int baseOffset = reader.ReadInt32(); // Bank data
-            int baseSize = reader.ReadInt32();
-            int entryOffset = reader.ReadInt32(); // Entry name data
-            int entrySize = reader.ReadInt32();
+            int version = waveBankReader.ReadInt32(); // 46 - XACT 3.0
+            int headerVersion = waveBankReader.ReadInt32();
 
-            int extraOffset = reader.ReadInt32(); // Seektables
-            int extraSize = reader.ReadInt32();
-            int namesOffset = reader.ReadInt32(); // Entry names
-            int namesSize = reader.ReadInt32();
+            int baseOffset = waveBankReader.ReadInt32(); // Bank data
+            int baseSize = waveBankReader.ReadInt32();
+            int entryOffset = waveBankReader.ReadInt32(); // Entry name data
+            int entrySize = waveBankReader.ReadInt32();
 
-            uint dataOffset = (uint)reader.ReadInt32();
-            int dataSize = reader.ReadInt32();
+            int extraOffset = waveBankReader.ReadInt32(); // Seektables
+            int extraSize = waveBankReader.ReadInt32();
+            int namesOffset = waveBankReader.ReadInt32(); // Entry names
+            int namesSize = waveBankReader.ReadInt32();
 
-            reader.BaseStream.Seek(baseOffset, SeekOrigin.Begin);
+            uint dataOffset = (uint)waveBankReader.ReadInt32();
+            int dataSize = waveBankReader.ReadInt32();
 
-            uint baseFlags = reader.ReadUInt32();
-            int totalSubsongs = reader.ReadInt32();
-            string wavebankName = reader.ReadNullTerminatedString(64);
+            waveBankReader.BaseStream.Seek(baseOffset, SeekOrigin.Begin);
 
-            int entryElemSize = reader.ReadInt32();
-            int metaNameEntrySize = reader.ReadInt32();
+            uint baseFlags = waveBankReader.ReadUInt32();
+            int totalSubsongs = waveBankReader.ReadInt32();
+            string wavebankName = waveBankReader.ReadNullTerminatedString(64);
 
-            int entryAlignment = reader.ReadInt32();
-            uint format = (uint)reader.ReadInt32();
-            long buildTime = reader.ReadInt64();
+            int entryElemSize = waveBankReader.ReadInt32();
+            int metaNameEntrySize = waveBankReader.ReadInt32();
+
+            int entryAlignment = waveBankReader.ReadInt32();
+            uint format = (uint)waveBankReader.ReadInt32();
+            long buildTime = waveBankReader.ReadInt64();
+
+            #endregion
+
+            #region Sound Bank Parsing
+
+            soundBankReader.ReadUInt16(); // toolVersion
+
+            uint formatVersion = soundBankReader.ReadUInt16();
+            if (formatVersion != 43)
+                Debug.WriteLine("Warning: SoundBank format {0} not supported.", formatVersion);
+
+            soundBankReader.ReadUInt16(); // crc
+
+            soundBankReader.ReadUInt32(); // lastModifiedLow
+            soundBankReader.ReadUInt32(); // lastModifiedHigh
+            soundBankReader.ReadByte(); // platform ???
+
+            soundBankReader.ReadUInt16(); // numSimpleCues
+            soundBankReader.ReadUInt16(); // numComplexCues
+            soundBankReader.ReadUInt16(); //unkn
+            soundBankReader.ReadUInt16(); // numTotalCues
+            soundBankReader.ReadByte(); // numWaveBanks
+            soundBankReader.ReadUInt16(); // numSounds
+            uint cueNameTableLen = soundBankReader.ReadUInt16();
+            soundBankReader.ReadUInt16(); //unkn
+
+            soundBankReader.ReadUInt32(); // simpleCuesOffset
+            soundBankReader.ReadUInt32(); //complexCuesOffset
+            uint cueNamesOffset = soundBankReader.ReadUInt32();
+            //soundBankReader.ReadUInt32(); //unkn
+            //soundBankReader.ReadUInt32(); // variationTablesOffset
+            //soundBankReader.ReadUInt32(); //unkn
+            //uint waveBankNameTableOffset = soundBankReader.ReadUInt32();
+            //soundBankReader.ReadUInt32(); // cueNameHashTableOffset
+            //soundBankReader.ReadUInt32(); // cueNameHashValsOffset
+            //soundBankReader.ReadUInt32(); // soundsOffset
+
+            //parse cue name table
+            soundBankReader.BaseStream.Seek(cueNamesOffset, SeekOrigin.Begin);
+            string[] cueNames = System.Text.Encoding.UTF8.GetString(soundBankReader.ReadBytes((int)cueNameTableLen), 0, (int)cueNameTableLen).Split('\0');
+
+            #endregion
 
             List<WaveBankCue> cues = [];
 
-            for (int i = 1; i < Main.maxMusic; i++)
+            for (int i = 0; i < Main.maxMusic - 1; i++)
             {
-                reader = readers[i];
-                reader.BaseStream.Seek(entryOffset + (i - 1) * entryElemSize, SeekOrigin.Begin);
+                var reader = cueReaders[i];
+                reader.BaseStream.Seek(entryOffset + i * entryElemSize, SeekOrigin.Begin);
 
                 uint entryInfo = reader.ReadUInt32();
                 uint entryFlags = entryInfo & 0xF;
@@ -103,8 +148,7 @@ namespace MonoStereoMod.Utils
                 //    _ => throw new ArgumentException("Unknown audio codec type!", nameof(readers))
                 //};
 
-                // We can skip reading from the .xsb file because tMod has already done it for us :)
-                string name = loadedSystem.TrackNamesByIndex[i];
+                string name = cueNames[i];
                 WaveFormat waveFormat = WaveFormat.CreateCustomFormat(WaveFormatEncoding.Adpcm, (int)sampleRate, (int)channels, (int)(blockAlign * sampleRate), (int)blockAlign, (int)(blockAlign / channels));
 
                 long loopStart = loopStartSample > 0 ? loopStartSample : -1L;

@@ -1,5 +1,6 @@
 ﻿using MonoStereo;
 using MonoStereo.AudioSources;
+using MonoStereo.SampleProviders;
 using NAudio.Dsp;
 using NAudio.Wave;
 using System;
@@ -10,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace MonoStereoMod.Audio
 {
-    internal class TerrariaCachedSoundEffectReader : ISoundEffectSource
+    internal class TerrariaCachedSoundEffectReader : ISoundEffectSource, ILoopTags
     {
         #region Metadata
 
@@ -181,7 +182,7 @@ namespace MonoStereoMod.Audio
         }
 
         // Loads the sound asynchronously
-        internal TerrariaCachedSoundEffectReader(Func<CachedSoundEffect> generatorFunc)
+        public TerrariaCachedSoundEffectReader(Func<CachedSoundEffect> generatorFunc)
         {
             ThreadPool.QueueUserWorkItem(new WaitCallback(sender =>
             {
