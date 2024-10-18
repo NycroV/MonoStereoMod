@@ -93,16 +93,19 @@ namespace MonoStereoMod.Utils
                 uint channels = (format >> 2) & 0x7; // 3 bytes
                 uint tag = format & 0x3; // 2 bytes
 
-                WaveFormatEncoding encoding = tag switch
-                {
-                    0 => WaveFormatEncoding.Pcm,
-                    2 => WaveFormatEncoding.Adpcm,
-                    _ => throw new ArgumentException("Unknown audio codec type!", nameof(readers))
-                };
+                // This is technically what we should be doing, but ALL vanilla tracks
+                // are Adpcm format. We can just skip over this for optimization purposes.
+                //
+                //WaveFormatEncoding encoding = tag switch
+                //{
+                //    0 => WaveFormatEncoding.Pcm,
+                //    2 => WaveFormatEncoding.Adpcm,
+                //    _ => throw new ArgumentException("Unknown audio codec type!", nameof(readers))
+                //};
 
                 // We can skip reading from the .xsb file because tMod has already done it for us :)
                 string name = loadedSystem.TrackNamesByIndex[i];
-                WaveFormat waveFormat = WaveFormat.CreateCustomFormat(encoding, (int)sampleRate, (int)channels, (int)(blockAlign * sampleRate), (int)blockAlign, (int)(blockAlign / channels));
+                WaveFormat waveFormat = WaveFormat.CreateCustomFormat(WaveFormatEncoding.Adpcm, (int)sampleRate, (int)channels, (int)(blockAlign * sampleRate), (int)blockAlign, (int)(blockAlign / channels));
 
                 long loopStart = loopStartSample > 0 ? loopStartSample : -1L;
                 long loopEnd = loopEndSample > 0 && loopEndSample != numSamples ? loopEndSample : -1L;

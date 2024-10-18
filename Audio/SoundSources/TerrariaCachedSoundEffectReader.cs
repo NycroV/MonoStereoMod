@@ -5,10 +5,12 @@ using NAudio.Wave;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace MonoStereoMod.Audio
 {
-    internal class TerrariaCachedSoundEffectReader(CachedSoundEffect cachedSound) : ISoundEffectSource
+    internal class TerrariaCachedSoundEffectReader : ISoundEffectSource
     {
         #region Metadata
 
@@ -16,13 +18,13 @@ namespace MonoStereoMod.Audio
 
         public WaveFormat WaveFormat => CachedSoundEffect.WaveFormat;
 
-        public Dictionary<string, string> Comments { get; } = cachedSound.Comments.ToDictionary();
+        public Dictionary<string, string> Comments { get; private set; }
 
         #endregion
 
         #region Playback fields
 
-        public CachedSoundEffect CachedSoundEffect { get; private set; } = cachedSound;
+        public CachedSoundEffect CachedSoundEffect { get; private set; }
 
         public PlaybackState PlaybackState { get; set; } = PlaybackState.Playing;
 
@@ -36,12 +38,12 @@ namespace MonoStereoMod.Audio
         {
             get
             {
-                long pos = (long)(effectivePosition / sampleScalar);
+                long pos = (long)(effectivePosition / safeScalar);
                 return pos + (pos % AudioStandards.ChannelCount);
             }
             set
             {
-                long pos = (long)(value * sampleScalar);
+                long pos = (long)(value * safeScalar);
                 effectivePosition = pos - (pos % AudioStandards.ChannelCount);
             }
         }
@@ -65,17 +67,19 @@ namespace MonoStereoMod.Audio
 
         public float EffectivePitch
         {
-            get => sampleScalar;
+            get => safeScalar;
             set
             {
-                if (sampleScalar == value)
+                // Check for if the load is complete only once.
+                // After that, we can directly access the underlying scalar.
+                if (safeScalar == value)
                     return;
 
                 long pos = Position;
 
                 if (value == 1f)
                 {
-                    sampleScalar = 1f;
+                    scalar = 1f;
                     resampledData = CachedSoundEffect.AudioData;
 
                     effectiveLength = Length;
@@ -85,15 +89,15 @@ namespace MonoStereoMod.Audio
                     effectiveLoopEnd = LoopEnd;
                 }
 
-                sampleScalar = value;
+                scalar = value;
                 WdlResampler resampler = new();
 
                 resampler.SetMode(true, 2, false);
                 resampler.SetFilterParms();
                 resampler.SetFeedMode(false); // output driven
-                resampler.SetRates(AudioStandards.SampleRate, AudioStandards.SampleRate / sampleScalar);
+                resampler.SetRates(AudioStandards.SampleRate, AudioStandards.SampleRate / scalar);
 
-                int count = (int)(CachedSoundEffect.AudioData.Length / sampleScalar) + 2;
+                int count = (int)(CachedSoundEffect.AudioData.Length / scalar) + 2;
                 count -= count % AudioStandards.ChannelCount;
 
                 int framesRequested = count / AudioStandards.ChannelCount;
@@ -108,10 +112,10 @@ namespace MonoStereoMod.Audio
                 effectiveLength = resampledData.Length;
                 Position = pos;
 
-                effectiveLoopStart = (long)(LoopStart / sampleScalar);
+                effectiveLoopStart = (long)(LoopStart / scalar);
                 effectiveLoopStart -= effectiveLoopStart % AudioStandards.ChannelCount;
 
-                effectiveLoopEnd = (long)(LoopEnd / sampleScalar);
+                effectiveLoopEnd = (long)(LoopEnd / scalar);
                 effectiveLoopEnd += effectiveLoopEnd % AudioStandards.ChannelCount;
 
                 // Sometimes rounding results in 0 or -2.
@@ -125,22 +129,87 @@ namespace MonoStereoMod.Audio
             }
         }
 
-        private float sampleScalar = 1f;
+        // This allows for asynchronous loading if possible,
+        // but still allows synchronous access if it is required.
+        private readonly TaskCompletionSource readySource = new();
 
-        private long effectiveLength = cachedSound.AudioData.Length;
+        private float scalar = 1f;
+        private float safeScalar
+        {
+            get
+            {
+                readySource.Task.GetAwaiter().GetResult();
+                return scalar;
+            }
+
+            set
+            {
+                readySource.Task.GetAwaiter().GetResult();
+                scalar = value;
+            }
+        }
+
+        private long effectiveLength;
 
         private long effectivePosition = 0;
 
-        private long effectiveLoopStart = cachedSound.LoopStart;
+        private long effectiveLoopStart;
 
-        private long effectiveLoopEnd = cachedSound.LoopEnd;
+        private long effectiveLoopEnd;
 
-        private float[] resampledData = cachedSound.AudioData;
+        private float[] resampledData;
 
         #endregion
 
+        private void Load(CachedSoundEffect sound)
+        {
+            Comments = sound.Comments.ToDictionary();
+            CachedSoundEffect = sound;
+
+            effectiveLength = sound.AudioData.Length;
+            effectiveLoopStart = sound.LoopStart;
+            effectiveLoopEnd = sound.LoopEnd;
+            resampledData = sound.AudioData;
+
+            readySource.SetResult();
+        }
+
+        // Loads the sound synchronously
+        public TerrariaCachedSoundEffectReader(CachedSoundEffect cachedSound)
+        {
+            Load(cachedSound);
+        }
+
+        // Loads the sound asynchronously
+        internal TerrariaCachedSoundEffectReader(Func<CachedSoundEffect> generatorFunc)
+        {
+            ThreadPool.QueueUserWorkItem(new WaitCallback(sender =>
+            {
+                var creation = sender as object[];
+
+                var sound = creation[0] as TerrariaCachedSoundEffectReader;
+                var cachedSound = (creation[1] as Func<CachedSoundEffect>)();
+
+                sound.Load(cachedSound);
+            }),
+            new object[] { this, generatorFunc });
+        }
+
         public int Read(float[] buffer, int offset, int count)
         {
+            // If the sound hasn't finished loading yet, fill the buffer with silence.
+            // It's better to delay the playback by a few milliseconds than it is to hear stuttering.
+            //
+            // Often times, even if the load is asynchronous, it will still finish before the first read call,
+            // so this code is typically very unlikely to run.
+            if (!readySource.Task.IsCompleted)
+            {
+                for (int i = 0; i < count; i++)
+                    buffer[offset + i] = 0;
+
+                return count;
+            }
+
             int samplesCopied = 0;
 
             do

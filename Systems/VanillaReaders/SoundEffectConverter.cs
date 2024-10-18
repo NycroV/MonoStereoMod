@@ -16,7 +16,7 @@ namespace MonoStereoMod.Systems
             FAudio.FAudioBuffer handle = xnaEffect.GetHandle();
             IntPtr formatPtr = xnaEffect.GetFormatPtr();
 
-            // Conver the FAudio WaveFormatExtensible into a NAudio WaveFormat.
+            // Convert the FAudio WaveFormatExtensible into a NAudio WaveFormat.
             FAudio.FAudioWaveFormatEx* tag = (FAudio.FAudioWaveFormatEx*)formatPtr;
             WaveFormat format = WaveFormat.CreateCustomFormat(
                 (WaveFormatEncoding)tag->wFormatTag,

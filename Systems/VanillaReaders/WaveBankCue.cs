@@ -1,5 +1,7 @@
-﻿using NAudio.Wave;
+﻿using MonoStereo;
+using NAudio.Wave;
 using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace MonoStereoMod.Systems
@@ -11,35 +13,110 @@ namespace MonoStereoMod.Systems
 
         public readonly string Name;
 
-        private readonly WaveFormat SourceFormat;
-
+        // Public facing wave format is different from source.
         public WaveFormat WaveFormat { get; }
 
-        #endregion
-
-        #region Playback
+        // This is because source uses Adpcm encoding, but we supply the public with
+        // decoded pcm data.
+        private readonly WaveFormat SourceFormat;
 
         private readonly BinaryReader Reader;
-
-        public bool IsLoaded;
-
-        private readonly bool Adpcm;
-
-        internal byte[] Buffer;
 
         #endregion
 
         #region Play region
 
+        // Cached for performance.
+        public long PcmLength { get; private set; }
+
+        // Adpcm is a mess to read.
+        // I can tell you what's happening, but have not a clue about
+        // what's going on with the encoding constants.
+        public long PcmPosition
+        {
+            get
+            {
+                // The leftoverCount is the number of bytes we've read from a block
+                // that were left over for a given read and have been queued for the next read.
+                long byteCount = 0;
+                long leftoverCount = 0;
+
+                SeekLock.Execute(() =>
+                {
+                    byteCount = SourcePosition;
+                    leftoverCount = BlockLeftovers.Count;
+                });
+
+                int channels = SourceFormat.Channels;
+                int blockAlignment = (SourceFormat.BlockAlign + 22) * channels;
+
+                // The number of sample frames (a set of samples, with one for each playback channel) in a full Adpcm block.
+                int frameCountFullBlock = ((blockAlignment / channels) - 7) * 2 + 2;
+                long frameCountLastBlock = 0;
+
+                // This should never be true, but it's here just in case.
+                if ((byteCount % blockAlignment) > 0)
+                    frameCountLastBlock = ((byteCount % blockAlignment / channels) - 7) * 2 + 2;
+
+                // Convert sample frames to raw byte count.
+                long frameCount = (byteCount / blockAlignment * frameCountFullBlock) + frameCountLastBlock;
+                return frameCount * sizeof(short) * channels - leftoverCount;
+            }
+
+            set
+            {
+                int channels = SourceFormat.Channels;
+                int blockAlignment = (SourceFormat.BlockAlign + 22) * channels;
+
+                // The number of sample frames (a set of samples, with one for each playback channel) in a full Adpcm block.
+                int frameCountFullBlock = ((blockAlignment / channels) - 7) * 2 + 2;
+
+                int frameCount = (int)value / channels / sizeof(short);
+                int blocks = (int)Math.Floor((float)frameCount / frameCountFullBlock);
+
+                // We seek to the beginning of the block where we should end up, as we will need
+                // to queue any bytes that are within the next block, but past our seek point.
+                int seekPosition = blocks * blockAlignment;
+                long seekedFrames = blocks * (long)frameCountFullBlock;
+
+                SeekLock.Execute(() =>
+                {
+                    SourcePosition = seekPosition;
+                    BlockLeftovers.Clear();
+
+                    if (seekedFrames - value == 0L)
+                        return;
+
+                    int bytesToRead = (int)Math.Min(blockAlignment, SourceLength - SourcePosition);
+                    int bytesToDiscard = (int)(value - seekedFrames);
+
+                    byte[] source = Reader.ReadBytes(bytesToRead);
+                    byte[] decoded = ConvertMsAdpcmToPcm(source, channels, blockAlignment);
+
+                    // Queue extra bytes from the read block.
+                    for (int i = bytesToDiscard; i < decoded.Length; i++)
+                        BlockLeftovers.Enqueue(decoded[i]);
+                });
+            }
+        }
+
         private readonly long SourceLength;
 
-        public long Length { get; private set; }
+        private readonly long SourceOffset;
 
-        private readonly long Offset;
+        private long SourcePosition
+        {
+            get => Reader.BaseStream.Position - SourceOffset;
+            set => Reader.BaseStream.Position = value + SourceOffset;
+        }
 
         public long LoopStart { get; }
 
         public long LoopEnd { get; }
+
+        private readonly Queue<byte> BlockLeftovers = [];
+
+        private readonly QueuedLock SeekLock = new();
 
         #endregion
 
@@ -47,53 +124,74 @@ namespace MonoStereoMod.Systems
         {
             Name = name;
             Reader = reader;
-            Offset = offset;
+            SourceOffset = offset;
             SourceLength = sourceLength;
             LoopStart = loopStart;
             LoopEnd = loopEnd;
-            IsLoaded = false;
 
+            // 2 byte samples (16 bit pcm)
+            // We perform the conversion from Adpcm to Pcm in real time.
+            int blockAlign = 2 * waveFormat.Channels;
+            WaveFormat = WaveFormat.CreateCustomFormat(WaveFormatEncoding.Pcm, waveFormat.SampleRate, waveFormat.Channels, waveFormat.SampleRate * blockAlign, blockAlign, blockAlign * 8 / waveFormat.Channels);
             SourceFormat = waveFormat;
-            WaveFormat = waveFormat;
 
-            if (waveFormat.Encoding == WaveFormatEncoding.Adpcm)
+            PcmLength = sampleLength * WaveFormat.BlockAlign;
+        }
+
+        public int Read(byte[] buffer, int offset, int count)
+        {
+            // Adpcm data must be read in blocks at a time.
+            // Oftentimes, the block size does not line up with how many bytes we actually need.
+            // We get around this by rounding the amount of blocks we need up, and then queueing
+            // the extra bytes for the next read.
+            List<byte> samples = [];
+
+            SeekLock.Execute(() =>
             {
-                // 2 byte samples (16 bit pcm)
-                int blockAlign = 2 * waveFormat.Channels;
-                WaveFormat = WaveFormat.CreateCustomFormat(WaveFormatEncoding.Pcm, waveFormat.SampleRate, waveFormat.Channels, waveFormat.SampleRate * blockAlign, blockAlign, blockAlign * 8 / waveFormat.Channels);
-                Adpcm = true;
-            }
+                // Check for leftover bytes from the last block
+                while (BlockLeftovers.TryDequeue(out byte sample) && samples.Count < count)
+                    samples.Add(sample);
 
-            Length = sampleLength * WaveFormat.BlockAlign;
-        }
+                int countRemaining = count - samples.Count;
 
-        internal void Load()
-        {
-            // The Reader is actually accessing the original WaveBank file.
-            // We seek to the beginning of the audio data region, and read it all into memory.
-            Reader.BaseStream.Seek(Offset, SeekOrigin.Begin);
-            byte[] buffer = Reader.ReadBytes((int)SourceLength);
+                // If there were enough bytes in the last block, we don't need to read any more.
+                if (countRemaining == 0)
+                    return;
 
-            // Vanilla tracks are encoding using the Microsoft ADPCM format.
-            // We need to conver them to readable, raw PCM samples.
-            if (Adpcm)
-                buffer = ConvertMsAdpcmToPcm(buffer, 0, buffer.Length, WaveFormat.Channels, (SourceFormat.BlockAlign + 22) * WaveFormat.Channels);
+                int channels = SourceFormat.Channels;
+                int blockAlignment = (SourceFormat.BlockAlign + 22) * channels;
 
-            Length = buffer.Length;
-            Buffer = buffer;
-            IsLoaded = true;
-        }
+                // The number of sample frames (a set of samples, with one for each playback channel) in a full Adpcm block.
+                int frameCountFullBlock = ((blockAlignment / channels) - 7) * 2 + 2;
 
-        internal void Unload()
-        {
-            Buffer = null;
-            IsLoaded = false;
+                int frameCount = countRemaining / channels / sizeof(short);
+                int byteCount = (int)Math.Ceiling((float)frameCount / frameCountFullBlock) * blockAlignment;
+
+                int bytesToRead = Math.Min(byteCount, (int)(SourceLength - SourcePosition));
+                byte[] sourceBytes = Reader.ReadBytes(bytesToRead);
+
+                byte[] decoded = ConvertMsAdpcmToPcm(sourceBytes, channels, blockAlignment);
+
+                for (int i = 0; i < decoded.Length; i++)
+                {
+                    // Only copy over the amount we need.
+                    if (samples.Count < count)
+                        samples.Add(decoded[i]);
+
+                    // Anything extra goes into the queue for the next read.
+                    else
+                        BlockLeftovers.Enqueue(decoded[i]);
+                }
+
+                samples.CopyTo(buffer, offset);
+            });
+
+            return samples.Count;
         }
 
         public void Dispose()
         {
             Reader.Close();
-            Buffer = null;
         }
     }
 }

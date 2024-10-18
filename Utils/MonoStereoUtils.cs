@@ -273,21 +273,26 @@ namespace MonoStereoMod.Utils
         /// <summary>
         /// Converts a buffer of Adpcm data to 16-bit pcm
         /// </summary>
-        internal static byte[] ConvertMsAdpcmToPcm(byte[] buffer, int offset, int count, int channels, int blockAlignment)
+        internal static byte[] ConvertMsAdpcmToPcm(byte[] buffer, int channels, int blockAlignment)
         {
+            int count = buffer.Length;
+            int sampleOffset = 0;
+            int offset = 0;
+
             MsAdpcmState channel0 = new();
             MsAdpcmState channel1 = new();
+
             int blockPredictor;
+            bool stereo = channels == 2;
 
             int sampleCountFullBlock = ((blockAlignment / channels) - 7) * 2 + 2;
             int sampleCountLastBlock = 0;
+
             if ((count % blockAlignment) > 0)
                 sampleCountLastBlock = (((count % blockAlignment) / channels) - 7) * 2 + 2;
-            int sampleCount = ((count / blockAlignment) * sampleCountFullBlock) + sampleCountLastBlock;
-            var samples = new byte[sampleCount * sizeof(short) * channels];
-            int sampleOffset = 0;
 
-            bool stereo = channels == 2;
+            int sampleCount = ((count / blockAlignment) * sampleCountFullBlock) + sampleCountLastBlock;
+            var samples = new byte[sampleCount * sizeof(short) * channels];            
 
             while (count > 0)
             {

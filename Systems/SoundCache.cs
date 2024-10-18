@@ -1,4 +1,5 @@
 ﻿using MonoStereo;
+using MonoStereoMod.Audio;
 using System.Collections.Generic;
 using System.Linq;
 using Xna = Microsoft.Xna.Framework.Audio;
@@ -21,15 +22,26 @@ namespace MonoStereoMod.Systems
         // This allows for the accessing of the FNA sounds from MonoStereo instances, in addition to the other way around.
         public static Dictionary<MonoStereoSoundEffect, Xna.SoundEffectInstance> SoundLookup => SoundTracker.ToDictionary(kvp => kvp.Value, kvp => kvp.Key);
 
-        // Searches for a FNA SoundEffect => MonoStereo CachedSoundEffect mapping,
-        // creates one if it does not already exist, and returns that mapping.
-        public static CachedSoundEffect GetCachedSound(Xna.SoundEffect sound)
+        // Gets the MonoStereo version of an FNA sound effect.
+        //
+        // This allows the offloading of data copying from FNA => MS to a separate thread to improve performance,
+        // if the desired sound effect has not been copied over yet.
+        //
+        // Attempts to access data before the load is complete will wait for the load to complete before executing.
+        public static TerrariaCachedSoundEffectReader GetCachedSoundReader(Xna.SoundEffect sound)
         {
             if (Cache.TryGetValue(sound, out var cachedSound))
-                return cachedSound;
+                return new(cachedSound);
 
+            return new(() => LoadCachedSound(sound));
+        }
+
+        // Copies the data from an FNA sound into a MS sound, and caches
+        // that MS sound for later re-use.
+        public static CachedSoundEffect LoadCachedSound(Xna.SoundEffect sound)
+        {
             var monoStereoEffect = sound.GetMonoStereoEffect();
-            Cache.Add(sound, monoStereoEffect);
+            Cache[sound] = monoStereoEffect;
             return monoStereoEffect;
         }
 

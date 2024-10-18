@@ -29,7 +29,7 @@ namespace MonoStereoMod.Detours
         public static SoundEffectInstance On_SoundEffect_CreateInstance(SoundEffect_CreateInstance_OrigDelegate orig, SoundEffect self)
         {
             var xnaInstance = orig(self);
-            var msInstance = new MonoStereoSoundEffect(new TerrariaCachedSoundEffectReader(SoundCache.GetCachedSound(self)));
+            var msInstance = new MonoStereoSoundEffect(SoundCache.GetCachedSoundReader(self));
 
             SoundCache.Map(xnaInstance, msInstance);
             return xnaInstance;

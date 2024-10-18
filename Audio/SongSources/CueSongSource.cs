@@ -2,7 +2,6 @@
 using MonoStereo.Encoding;
 using MonoStereoMod.Systems;
 using NAudio.Wave;
-using System;
 using System.Collections.Generic;
 
 namespace MonoStereoMod.Audio
@@ -55,11 +54,6 @@ namespace MonoStereoMod.Audio
 
         public WaveFormat WaveFormat => Source.WaveFormat;
 
-        public void OnStop()
-        {
-            CueReader.Cue.Unload();
-        }
-
         public void Close()
         {
             CueReader.Dispose();
@@ -67,39 +61,25 @@ namespace MonoStereoMod.Audio
 
         public int Read(float[] buffer, int offset, int count)
         {
-            if (!CueReader.Cue.IsLoaded)
-                CueReader.Cue.Load();
-
             return Source.LoopedRead(buffer, offset, count, this, IsLooped, Length, LoopStart, LoopEnd);
         }
     }
 
+    // This wrapper just standardizes the WaveBankCue into a WaveStream.
+    // Technically it's not even necessary, but it does help to make things a little nicer to read,
+    // and follows the format of all other IO readers (Performance reader => File reader => Decoder)
     internal class CueReader(WaveBankCue cue) : WaveStream
     {
         public WaveBankCue Cue = cue;
 
         public override WaveFormat WaveFormat => Cue.WaveFormat;
 
-        public override long Length => Cue.Length;
+        public override long Length => Cue.PcmLength;
 
-        public override long Position { get; set; } = 0L;
+        public override long Position { get => Cue.PcmPosition; set => Cue.PcmPosition = value; }
 
-        public override int Read(byte[] buffer, int offset, int count)
-        {
-            long samplesAvailable = Length - Position;
-            int samplesToCopy = Math.Min((int)samplesAvailable, count);
-            Array.Copy(Cue.Buffer, Position, buffer, offset, samplesToCopy);
+        public override int Read(byte[] buffer, int offset, int count) => Cue.Read(buffer, offset, count);
 
-            Position += samplesToCopy;
-
-            return samplesToCopy;
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            base.Dispose(disposing);
-            Cue.Unload();
-            Cue.Dispose();
-        }
+        protected override void Dispose(bool disposing) => Cue.Dispose();
     }
 }
