@@ -54,14 +54,16 @@ namespace MonoStereoMod.Systems
 
             // Read the cues (tracks) from the WaveBank, and create a dictionary
             // from those entries that is indexed by track name.
-            Cues = ReadCues(waveBankReader, soundBankReader, readers, Main.audioSystem as LegacyAudioSystem).Select<WaveBankCue, KeyValuePair<string, WaveBankCue>>(cue => new("Music" + Path.DirectorySeparatorChar + cue.Name, cue)).ToDictionary();
+            Cues = ReadCues(waveBankReader, soundBankReader, readers, Main.audioSystem as LegacyAudioSystem).Select<WaveBankCue, KeyValuePair<string, WaveBankCue>>(cue => new("Music" + Path.DirectorySeparatorChar + cue.Name + ".xwb", cue)).ToDictionary();
 
             // Sets the asset names to include the file extension.
-            SetAssetNames(Cues.Keys.Select(cue => cue + ".xwb"));
+            SetAssetNames(Cues.Keys);
 
             // Dispose info streams.
             waveBankReader.Close();
             soundBankReader.Close();
+
+            var parths = this.assetPaths;
         }
 
         public override Stream OpenStream(string assetName) => new CueReader(Cues[assetName]);

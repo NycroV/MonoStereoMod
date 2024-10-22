@@ -1,6 +1,6 @@
 ﻿using MonoStereo;
 using MonoStereo.Filters;
-using MonoStereo.SampleProviders;
+using MonoStereo.Structures;
 using NAudio.Utils;
 using System;
 using System.Collections.Concurrent;

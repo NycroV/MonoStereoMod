@@ -1,4 +1,4 @@
 displayName = MonoStereo
 author = Nycro
 version = 1.0.0
-dllReferences = MonoStereo.Slim.Dependencies
+dllReferences = MonoStereo.Dependencies

@@ -1,6 +1,6 @@
 ﻿using MonoStereo;
-using MonoStereo.AudioSources;
-using MonoStereo.SampleProviders;
+using MonoStereo.Sources;
+using MonoStereo.Structures;
 using NAudio.Dsp;
 using NAudio.Wave;
 using System;
@@ -217,7 +217,7 @@ namespace MonoStereoMod.Audio
             {
                 long endIndex = effectiveLength;
 
-                if (IsLooped && effectiveLoopEnd != -1)
+                if (IsLooped && effectiveLoopEnd != -1 && effectivePosition < effectiveLoopEnd)
                     endIndex = effectiveLoopEnd;
 
                 long samplesAvailable = endIndex - effectivePosition;
@@ -231,7 +231,7 @@ namespace MonoStereoMod.Audio
                     effectivePosition += samplesToCopy;
                 }
 
-                if (IsLooped && effectivePosition == endIndex)
+                if (IsLooped && effectivePosition >= endIndex)
                 {
                     long startIndex = Math.Max(0, effectiveLoopStart);
                     effectivePosition = startIndex;

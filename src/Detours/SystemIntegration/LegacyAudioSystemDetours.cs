@@ -1,9 +1,12 @@
 ﻿using MonoStereo;
-using MonoStereo.AudioSources;
-using MonoStereo.AudioSources.Songs;
+using MonoStereo.Decoding;
+using MonoStereo.Sources;
+using MonoStereo.Sources.Songs;
 using MonoStereoMod.Audio;
+using NAudio.Wave;
 using ReLogic.Content.Sources;
 using System.Collections.Generic;
+using System.IO;
 using Terraria;
 using Terraria.Audio;
 
@@ -36,18 +39,47 @@ namespace MonoStereoMod.Detours
 
                 try
                 {
-                    ITerrariaSongSource source = extension switch
-                    {
-                        ".ogg" => new OggSongSource(contentSource.OpenStream(assetPathWithExtension), assetPathWithExtension),
-                        ".wav" => new WavSongSource(contentSource.OpenStream(assetPathWithExtension), assetPathWithExtension),
-                        ".mp3" => new Mp3SongSource(contentSource.OpenStream(assetPathWithExtension), assetPathWithExtension),
-                        ".xwb" => new CueSongSource(contentSource.OpenStream(assetPath) as CueReader),
-                        _ => null
-                    };
+                    Stream contentStream = contentSource.OpenStream(assetPathWithExtension);
+                    WaveStream waveStream = null;
+                    Dictionary<string, string> comments = null;
 
-                    if (source != null)
+                    switch (extension)
                     {
-                        ISongSource reader = MonoStereoMod.Config.ForceHighPerformance ? new HighPerformanceSongSource(source) : BufferedSongReader.Create(source, 2f);
+                        case ".ogg":
+                            waveStream = new OggReader(contentStream);
+                            comments = (waveStream as OggReader).Comments.ComposeComments();
+                            break;
+
+                        case ".wav":
+                            comments = contentStream.ReadComments();
+                            waveStream = new WaveFileReader(contentStream);
+                            break;
+
+                        case ".mp3":
+                            comments = contentStream.ReadComments();
+                            waveStream = new Mp3Reader(contentStream);
+                            break;
+
+                        case ".xwb":
+                            CueReader cueStream = contentStream as CueReader;
+                            comments = [];
+
+                            if (cueStream.Cue.LoopStart > 0)
+                                comments.Add("LOOPSTART", cueStream.Cue.LoopStart.ToString());
+
+                            if (cueStream.Cue.LoopEnd > 0)
+                                comments.Add("LOOPEND", cueStream.Cue.LoopEnd.ToString());
+
+                            waveStream = cueStream;
+                            break;
+                    }
+
+                    if (waveStream != null)
+                    {
+                        StreamFormattingSongSource source = new(waveStream, comments);
+                        ISongSource reader = MonoStereoMod.Config.ForceHighPerformance ? new HighPerformanceSongSource(source) : BufferedSongReader.Create(source);
+
+                        reader.IsLooped = true;
                         return new MonoStereoAudioTrack(reader);
                     }
                 }

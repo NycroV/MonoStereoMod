@@ -3,7 +3,7 @@ using static MonoStereoMod.Detours.Detours;
 
 using Microsoft.Xna.Framework;
 using MonoStereo;
-using MonoStereo.AudioSources;
+using MonoStereo.Sources;
 using MonoStereo.Outputs;
 using MonoStereoMod.Systems;
 using MonoStereoMod.Utils;
@@ -13,6 +13,12 @@ using System.Linq;
 using Terraria;
 using Terraria.Audio;
 using Terraria.ModLoader;
+using PortAudioSharp;
+using System.Runtime.InteropServices;
+using System.IO;
+using System.Reflection;
+using System.Threading;
+using MonoStereo.Structures;
 
 namespace MonoStereoMod
 {
@@ -34,6 +40,12 @@ namespace MonoStereoMod
         // P(erformance)
         internal const string HighPerformanceExtensionPrefix = ".mshp-";
 
+        // This is an external folder we are going to copy the portaudio library to.
+        internal static string PortAudioDirectory => string.Join(Path.DirectorySeparatorChar, Environment.CurrentDirectory, "Libraries", "portaudio", "19.7.0");
+
+        // We can free this and delete the copied file when this mod is unloaded or the game closes.
+        internal static IntPtr PortAudioHandle = IntPtr.Zero;
+
         public static class Config
         {
             // Configs are accessible here to allow for smaller dependencies with ILRepack.
@@ -44,42 +56,88 @@ namespace MonoStereoMod
             // including the config class causes ILRepack to require a reference to tModLoader.dll,
             // when it otherwise wouldn't. Possibly because of the property attributes? Not 100% sure.
 
-            public static int Latency { get; internal set; } = 150;
-            public static int BufferCount { get; internal set; } = 8;
-            public static bool ForceHighPerformance { get; internal set; } = false;
             public static int DeviceNumber { get; internal set; } = -1;
-            public static string DeviceDisplayName { get => HighPriorityWaveOutEvent.GetCapabilities(DeviceNumber).ProductName; }
+            public static string DeviceDisplayName { get => ModRunning && DeviceNumber >= 0 ? PortAudio.GetDeviceInfo(DeviceNumber).name : "Default"; }
+            public static bool ForceHighPerformance { get; internal set; } = false;
 
-            // Applies config changes to the output
-            internal static void ResetOutput(int? latency = null, int? bufferCount = null, int? deviceNumber = null)
+            // Applies config changes to the output.
+            internal static void ResetOutput(int deviceNumber = -1)
             {
-                Latency = latency ?? Latency;
-                BufferCount = bufferCount ?? BufferCount;
-                DeviceNumber = deviceNumber ?? DeviceNumber;
+                DeviceNumber = deviceNumber;
+
+                if (!ModRunning || true)
+                    return;
 
                 AudioManager.Output.Dispose();
-                AudioManager.Output = GetOutput();
+                AudioManager.Output = GenerateOutput();
                 AudioManager.Output.Init(AudioManager.MasterMixer);
                 AudioManager.Output.Play();
             }
 
-            internal static HighPriorityWaveOutEvent GetOutput() => new() { DesiredLatency = Latency, DeviceNumber = DeviceNumber, NumberOfBuffers = BufferCount };
+            // Generates the output based on the user's config.
+            internal static IMonoStereoOutput GenerateOutput()
+            {
+                int? device = DeviceNumber == -1 ? null : DeviceNumber;
+                return AudioManager.DefaultOutput(device, null);
+            }
         }
 
         // Used to determine whether the engine should be active.
-        public static bool ModRunning { get; set; } = false;
+        public static bool ModRunning { get; internal set; } = false;
 
         // Starts the MonoStereo engine
-        internal static void StartEngine() =>
+        internal static void StartEngine()
+        {
             AudioManager.InitializeCustomOutput(
-                Config.GetOutput(),
-                () => !ModRunning || Main.instance is null,
+                Config.GenerateOutput(),
+                CheckEngine,
                 musicVolume: Main.musicVolume,
                 soundEffectVolume: Main.soundVolume);
+        }
+
+        internal static bool CheckEngine() => !ModRunning || Main.instance is null;
 
         // Start the engine and detour TML/FNA to use our engine instead
         public override void Load()
         {
+            // First, we need to make sure that PortAudio is loadable.
+            // We do this by copying an embedded library file depending on the current OS to an external directory,
+            // and then loading that copied file directly.
+            //
+            // Default to Windows.
+            if (!NativeLibrary.TryLoad("portaudio", out PortAudioHandle))
+            {
+                string platform = "win";
+                string file = "portaudio.dll";
+
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                {
+                    platform = "linux";
+                    file = "libportaudio.so";
+                }
+
+                else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                {
+                    platform = "osx";
+                    file = "libportaudio.dylib";
+                }
+
+                string sourcePath = $"{Name}/lib/portaudio/{platform}/{file}";                 // Embedded library path
+                string outputDirectory = PortAudioDirectory;                                   // Output directory
+                string absolutePath = $"{outputDirectory}{Path.DirectorySeparatorChar}{file}"; // Total name of the copied library file
+
+                // Ensure the directory exists
+                if (!Directory.Exists(outputDirectory))
+                    Directory.CreateDirectory(outputDirectory);
+
+                // Copy the platform-specific file over to the destination directory.
+                var bytes = ModContent.GetFileBytes(sourcePath);
+                File.WriteAllBytes(absolutePath, bytes);
+
+                // Load the PortAudio library.
+                PortAudioHandle = NativeLibrary.Load(absolutePath);
+            }
+
             ModRunning = true;
             Main.instance.Exiting += Instance_Exiting; // Sets ModRunning to false whenever the game exits
 
@@ -192,6 +250,9 @@ namespace MonoStereoMod
 
             if (Main.audioSystem is not LegacyAudioSystem system)
                 return;
+
+            while (AudioManager.IsRunning)
+                Thread.Sleep(100);
 
             // These tracks are not included in the mappings, nor the automatic unloading
             // whenever this mod is unloaded by TML (they are not registered with the MusicLoader)

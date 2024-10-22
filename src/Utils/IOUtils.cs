@@ -1,4 +1,5 @@
-﻿using MonoStereoMod.Systems;
+﻿using MonoStereo;
+using MonoStereoMod.Systems;
 using NAudio.Wave;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -149,8 +150,8 @@ namespace MonoStereoMod.Utils
                 string name = cueNames[i];
                 WaveFormat waveFormat = WaveFormat.CreateCustomFormat(WaveFormatEncoding.Adpcm, (int)sampleRate, (int)channels, (int)(blockAlign * sampleRate), (int)blockAlign, (int)(blockAlign / channels));
 
-                long loopStart = loopStartSample > 0 ? loopStartSample : -1L;
-                long loopEnd = loopEndSample > 0 && loopEndSample != numSamples ? loopEndSample : -1L;
+                long loopStart = loopStartSample > 0 ? loopStartSample * AudioStandards.ChannelCount : -1L;
+                long loopEnd = loopEndSample > 0 && loopEndSample != numSamples ? loopEndSample * AudioStandards.ChannelCount : -1L;
 
                 reader.BaseStream.Seek(streamOffset, SeekOrigin.Begin);
                 WaveBankCue cue = new(reader, waveFormat, name, streamOffset, streamSize, numSamples, loopStart, loopEnd);

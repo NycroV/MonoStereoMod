@@ -8,8 +8,8 @@
 	  <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	</PropertyGroup>
 	<ItemGroup>
-	  <Reference Include="MonoStereo.Slim.Dependencies">
-	    <HintPath>lib\MonoStereo.Slim.Dependencies.dll</HintPath>
+	  <Reference Include="MonoStereo.Dependencies">
+	    <HintPath>lib\MonoStereo.Dependencies.dll</HintPath>
 	  </Reference>
 	</ItemGroup>
 	<ItemGroup>

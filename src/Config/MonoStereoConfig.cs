@@ -1,4 +1,5 @@
 ﻿using MonoStereo.Outputs;
+using PortAudioSharp;
 using System;
 using System.ComponentModel;
 using System.Text.Json.Serialization;
@@ -8,44 +9,12 @@ namespace MonoStereoMod.Config
 {
     internal class MonoStereoConfig : ModConfig
     {
-        [JsonIgnore] private int latency = MonoStereoMod.Config.Latency;
-        [JsonIgnore] private int bufferCount = MonoStereoMod.Config.BufferCount;
         [JsonIgnore] private bool forceHighPerformance = MonoStereoMod.Config.ForceHighPerformance;
         [JsonIgnore] private int outputDevice = MonoStereoMod.Config.DeviceNumber;
 
         public override ConfigScope Mode => ConfigScope.ClientSide;
 
         [Header("Playback")]
-        [DefaultValue(75)]
-        [Range(10, 250)]
-        [Slider]
-        public int Latency
-        {
-            get => latency;
-            set
-            {
-                latency = value;
-
-                if (MonoStereoMod.Config.Latency != latency && MonoStereoMod.ModRunning)
-                    MonoStereoMod.Config.ResetOutput(latency: latency);
-            }
-        }
-
-        [DefaultValue(8)]
-        [Range(2, 16)]
-        [Slider]
-        public int BufferCount
-        {
-            get => bufferCount;
-            set
-            {
-                bufferCount = value;
-
-                if (MonoStereoMod.Config.BufferCount != bufferCount && MonoStereoMod.ModRunning)
-                    MonoStereoMod.Config.ResetOutput(bufferCount: bufferCount);
-            }
-        }
-
         [DefaultValue(false)]
         [ReloadRequired]
         public bool ForceHighPerformance
@@ -62,17 +31,23 @@ namespace MonoStereoMod.Config
             get => outputDevice;
             set
             {
-                if (value == -2)
-                    outputDevice = HighPriorityWaveOutEvent.DeviceCount - 1;
+                if (!MonoStereoMod.ModRunning)
+                {
+                    outputDevice = value;
+                    return;
+                }
 
-                else if (value >= HighPriorityWaveOutEvent.DeviceCount)
+                if (value < -1)
+                    outputDevice = PortAudio.DeviceCount - 1;
+
+                else if (value >= PortAudio.DeviceCount)
                     outputDevice = -1;
 
                 else
                     outputDevice = value;
 
-                if (MonoStereoMod.Config.DeviceNumber != outputDevice && MonoStereoMod.ModRunning)
-                    MonoStereoMod.Config.ResetOutput(deviceNumber: outputDevice);
+                if (MonoStereoMod.Config.DeviceNumber != outputDevice)
+                    MonoStereoMod.Config.ResetOutput(outputDevice);
             }
         }
 
@@ -84,8 +59,6 @@ namespace MonoStereoMod.Config
 
         public override void OnChanged()
         {
-            MonoStereoMod.Config.Latency = Latency;
-            MonoStereoMod.Config.BufferCount = BufferCount;
             MonoStereoMod.Config.ForceHighPerformance = ForceHighPerformance;
             MonoStereoMod.Config.DeviceNumber = OutputDevice;
         }

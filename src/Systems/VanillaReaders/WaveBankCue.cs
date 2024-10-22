@@ -138,6 +138,7 @@ namespace MonoStereoMod.Systems
             PcmLength = sampleLength * WaveFormat.BlockAlign;
         }
 
+
         public int Read(byte[] buffer, int offset, int count)
         {
             // Adpcm data must be read in blocks at a time.

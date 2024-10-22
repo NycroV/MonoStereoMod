@@ -1,8 +1,12 @@
 ﻿using MonoMod.RuntimeDetour;
-using MonoStereo.AudioSources;
-using MonoStereo.AudioSources.Songs;
+using MonoStereo.Decoding;
+using MonoStereo.Sources;
+using MonoStereo.Sources.Songs;
 using MonoStereoMod.Audio;
 using MonoStereoMod.Systems;
+using NAudio.Wave;
+using ReLogic.Content.Sources;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using Terraria.Audio;
@@ -38,20 +42,37 @@ namespace MonoStereoMod.Detours
                 extension = extension.Replace(MonoStereoMod.HighPerformanceExtensionPrefix, ".");
             }
 
-            string fileName = path + extension;
             path = $"tmod:{path}{extension}";
+            Stream contentStream = ModContent.OpenRead(path, true);
 
-            Stream stream = ModContent.OpenRead(path, true);
+            WaveStream waveStream;
+            Dictionary<string, string> comments;
 
-            ITerrariaSongSource source = extension switch
+            switch (extension)
             {
-                ".wav" => new WavSongSource(stream, fileName),
-                ".mp3" => new Mp3SongSource(stream, fileName),
-                ".ogg" => new OggSongSource(stream, fileName),
-                _ => throw new FileLoadException($"Unknown music extension {extension}"),
-            };
+                case ".ogg":
+                    waveStream = new OggReader(contentStream);
+                    comments = (waveStream as OggReader).Comments.ComposeComments();
+                    break;
 
+                case ".wav":
+                    comments = contentStream.ReadComments();
+                    waveStream = new WaveFileReader(contentStream);
+                    break;
+
+                case ".mp3":
+                    comments = contentStream.ReadComments();
+                    waveStream = new Mp3Reader(contentStream);
+                    break;
+
+                default:
+                    throw new FileLoadException($"Unknown music extension {extension}");
+            }
+
+            StreamFormattingSongSource source = new(waveStream, comments);
             ISongSource reader = highPerformance ? new HighPerformanceSongSource(source) : BufferedSongReader.Create(source, 2f);
+
+            reader.IsLooped = true;
             return new MonoStereoAudioTrack(reader);
         }
     }

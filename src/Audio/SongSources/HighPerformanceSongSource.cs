@@ -1,6 +1,7 @@
 ﻿using MonoStereo;
-using MonoStereo.AudioSources;
-using MonoStereo.SampleProviders;
+using MonoStereo.Sources;
+using MonoStereo.Sources.Songs;
+using MonoStereo.Structures;
 using NAudio.Wave;
 using System;
 using System.Collections.Generic;
@@ -28,22 +29,18 @@ namespace MonoStereoMod.Audio
         private readonly ITerrariaSongSource Source;
         public ISongSource BaseSource => Source;
 
-        public long LoopStart { get; }
-        public long LoopEnd { get; }
-        public PlaybackState PlaybackState { get; set; } = PlaybackState.Stopped;
-
         public SongCache Audio { get; }
         public Dictionary<string, string> Comments => Source.Comments;
 
-        public bool IsLooped { get; set; }
-        public long Position { get => Audio.Position; set => Audio.Position = value; }
-
-        public long Length => Audio.Length;
         public WaveFormat WaveFormat { get; }
+        public PlaybackState PlaybackState { get; set; } = PlaybackState.Stopped;
 
-        public void Close() => Audio.Dispose();
+        public long LoopStart { get; }
+        public long LoopEnd { get; }
+        public bool IsLooped { get; set; }
 
-        public void OnStop() => Audio.Unload();
+        public long Position { get => Audio.Position; set => Audio.Position = value; }
+        public long Length => Audio.Length;
 
         public int Read(float[] buffer, int offset, int count)
         {
@@ -52,6 +49,10 @@ namespace MonoStereoMod.Audio
 
             return Audio.LoopedRead(buffer, offset, count, this, IsLooped, Length, LoopStart, LoopEnd);
         }
+
+        public void Close() => Audio.Dispose();
+
+        public void OnStop() => Audio.Unload();
 
         public class SongCache(ITerrariaSongSource source) : ISampleProvider, ISeekable
         {

@@ -1,6 +1,6 @@
 ﻿using ATL;
 using MonoStereo;
-using MonoStereo.SampleProviders;
+using MonoStereo.Structures;
 using MonoStereoMod.Systems;
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
@@ -8,6 +8,7 @@ using ReLogic.Content.Sources;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.InteropServices;
 using Terraria;
 using Terraria.Localization;
 using Terraria.ModLoader.Exceptions;
@@ -70,7 +71,7 @@ namespace MonoStereoMod.Utils
         // Converts an ISampleProvider of any formatting (sample rate or channels) to
         // a standardized, 44.1kHz 2 channel stream. Also modifies loopStart and loopEnd
         // tags to account for sample size adjustment.
-        public static ISampleProvider Reformat(this ISampleProvider provider, ref long loopStart, ref long loopEnd)
+        public static ISampleProvider Reformat(this ISampleProvider provider, ref long loopStart, ref long loopEnd, ref long length)
         {
             if (provider.WaveFormat.SampleRate != AudioStandards.SampleRate)
             {
@@ -88,6 +89,9 @@ namespace MonoStereoMod.Utils
                     loopEnd = (long)(loopEnd * scalar);
                     loopEnd -= loopEnd % provider.WaveFormat.Channels;
                 }
+
+                length = (long)(length * scalar);
+                length -= length % provider.WaveFormat.Channels;
             }
 
             if (provider.WaveFormat.Channels != AudioStandards.ChannelCount)
@@ -96,7 +100,9 @@ namespace MonoStereoMod.Utils
                     provider = new MonoToStereoSampleProvider(provider);
 
                 else
-                    throw new ArgumentException("Song file must be in either mono or stereo!", nameof(provider));
+                    throw new ArgumentException("Audio file must be in either mono or stereo!", nameof(provider));
+
+                length *= AudioStandards.ChannelCount;
             }
 
             return provider;
@@ -149,7 +155,7 @@ namespace MonoStereoMod.Utils
                 if (samplesToCopy > 0)
                     samplesCopied += sampleProvider.Read(buffer, offset + samplesCopied, samplesToCopy);
 
-                if (isLooped && seekSource.Position == endIndex)
+                if (isLooped && seekSource.Position >= endIndex)
                 {
                     long startIndex = Math.Max(0, loopStart);
                     seekSource.Position = startIndex;

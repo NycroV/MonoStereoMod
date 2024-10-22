@@ -1,8 +1,6 @@
-﻿
-// Add this to the same namespace as the normal ISongSource
-using MonoStereo.SampleProviders;
+﻿using MonoStereo.Structures;
 
-namespace MonoStereo.AudioSources
+namespace MonoStereo.Sources.Songs
 {
     public interface ITerrariaSongSource : ISeekableSongSource, ILoopTags
     { }

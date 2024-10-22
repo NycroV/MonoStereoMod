@@ -1,6 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using MonoStereo;
-using MonoStereo.AudioSources;
+using MonoStereo.Sources;
 using MonoStereo.Filters;
 using MonoStereoMod.Audio;
 using MonoStereoMod.Systems;

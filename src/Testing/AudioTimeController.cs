@@ -1,5 +1,5 @@
 ﻿using MonoStereo.Filters;
-using MonoStereo.SampleProviders;
+using MonoStereo.Structures;
 using System;
 using System.Linq;
 
