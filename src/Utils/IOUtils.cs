@@ -33,7 +33,7 @@ namespace MonoStereoMod.Utils
                 }
 
                 string embeddedFile = $"MonoStereoMod/lib/portaudio/{platform}/{file}";
-                string outputDirectory = string.Join(Path.DirectorySeparatorChar, Main.SavePath, "portaudio", "19.7.0");
+                string outputDirectory = string.Join(Path.DirectorySeparatorChar, Main.SavePath, "MonoStereoMod", "portaudio", "19.7.0");
                 string outputFile = $"{outputDirectory}{Path.DirectorySeparatorChar}{file}";
 
                 // Ensure the directory exists
