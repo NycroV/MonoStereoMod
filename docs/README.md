@@ -20,7 +20,7 @@ If you do not want to use MonoStereo in your mod project, no worries! MonoStereo
 ## Getting Started
 Before getting started with integrating MonoStereo into your mod, it is recommended to check out the [MonoStereo usage guides](https://github.com/NycroV/MonoStereo/tree/master/docs). You will not have to perform any setup, as MonoStereoMod handles all of it for you! However, it is a good idea to familiarize yourself with the MonoStereo programming style - things like applying filters, or how source reading works (if you plan to write any custom filters/sources).
 
-After getting a basic understanding of MonoStereo, you can head over to MonoStereoMod's documentation to see how to effectively integrate it into your mod!
+After getting a basic understanding of MonoStereo, you can head over to [MonoStereoMod's documentation](https://github.com/NycroV/MonoStereoMod/blob/master/docs/USAGE.md) to see how to effectively integrate it into your mod!
 
 ## Demos
 Below are some demos of audio effects implemented into Terraria using MonoStereo's capabilities:
