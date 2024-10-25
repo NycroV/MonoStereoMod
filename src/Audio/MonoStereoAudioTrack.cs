@@ -1,8 +1,8 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
 using MonoStereo;
-using MonoStereo.Sources;
 using MonoStereo.Filters;
+using MonoStereo.Sources;
 using NAudio.Wave;
 using System;
 using System.Collections.Generic;

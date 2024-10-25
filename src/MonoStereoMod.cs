@@ -1,24 +1,19 @@
 global using static MonoStereoMod.Utils.MonoStereoUtils;
-using static MonoStereoMod.Detours.Detours;
-
 using Microsoft.Xna.Framework;
 using MonoStereo;
 using MonoStereo.Sources;
-using MonoStereo.Outputs;
+using MonoStereo.Structures;
 using MonoStereoMod.Systems;
 using MonoStereoMod.Utils;
+using PortAudioSharp;
 using ReLogic.Utilities;
 using System;
 using System.Linq;
+using System.Threading;
 using Terraria;
 using Terraria.Audio;
 using Terraria.ModLoader;
-using PortAudioSharp;
-using System.Runtime.InteropServices;
-using System.IO;
-using System.Reflection;
-using System.Threading;
-using MonoStereo.Structures;
+using static MonoStereoMod.Detours.Detours;
 
 namespace MonoStereoMod
 {
@@ -40,12 +35,6 @@ namespace MonoStereoMod
         // P(erformance)
         internal const string HighPerformanceExtensionPrefix = ".mshp-";
 
-        // This is an external folder we are going to copy the portaudio library to.
-        internal static string PortAudioDirectory => string.Join(Path.DirectorySeparatorChar, Environment.CurrentDirectory, "Libraries", "portaudio", "19.7.0");
-
-        // We can free this and delete the copied file when this mod is unloaded or the game closes.
-        internal static IntPtr PortAudioHandle = IntPtr.Zero;
-
         public static class Config
         {
             // Configs are accessible here to allow for smaller dependencies with ILRepack.
@@ -57,21 +46,47 @@ namespace MonoStereoMod
             // when it otherwise wouldn't. Possibly because of the property attributes? Not 100% sure.
 
             public static int DeviceNumber { get; internal set; } = -1;
-            public static string DeviceDisplayName { get => ModRunning && DeviceNumber >= 0 ? PortAudio.GetDeviceInfo(DeviceNumber).name : "Default"; }
+            public static string DeviceDisplayName { get; internal set; } = "Default";
             public static bool ForceHighPerformance { get; internal set; } = false;
+            public static bool DeviceAvailable { get; internal set; } = true;
+            internal static readonly QueuedLock OutputLock = new();
 
             // Applies config changes to the output.
+            // We do this on a separate thread so the game doesn't lag whenever switching outputs.
             internal static void ResetOutput(int deviceNumber = -1)
             {
-                DeviceNumber = deviceNumber;
+                ThreadPool.QueueUserWorkItem(deviceNumber =>
+                {
+                    OutputLock.Execute(() =>
+                    {
+                        int device = (int)deviceNumber;
 
-                if (!ModRunning || true)
-                    return;
+                        if (device == DeviceNumber)
+                            return;
 
-                AudioManager.Output.Dispose();
-                AudioManager.Output = GenerateOutput();
-                AudioManager.Output.Init(AudioManager.MasterMixer);
-                AudioManager.Output.Play();
+                        DeviceNumber = device;
+                        DeviceInfo deviceInfo = device >= 0 ? PortAudio.GetDeviceInfo(device) : PortAudio.GetDeviceInfo(PortAudio.DefaultOutputDevice);
+
+                        string displayName = ModRunning && device >= 0 ? (deviceInfo.name ?? "???") : "Default";
+                        DeviceDisplayName = displayName[..int.Min(displayName.Length, 31)];
+
+                        if (!ModRunning)
+                            return;
+
+                        AudioManager.Output.Dispose();
+                        AudioManager.Output = GenerateOutput();
+                        try
+                        {
+                            AudioManager.Output.Init(AudioManager.MasterMixer);
+                            AudioManager.Output.Play();
+                            DeviceAvailable = true;
+                        }
+                        catch
+                        {
+                            DeviceAvailable = false;
+                        }
+                    });
+                }, deviceNumber);
             }
 
             // Generates the output based on the user's config.
@@ -95,6 +110,7 @@ namespace MonoStereoMod
                 soundEffectVolume: Main.soundVolume);
         }
 
+        // Checks to see if the MonoStereo engine should shut down.
         internal static bool CheckEngine() => !ModRunning || Main.instance is null;
 
         // Start the engine and detour TML/FNA to use our engine instead
@@ -103,40 +119,7 @@ namespace MonoStereoMod
             // First, we need to make sure that PortAudio is loadable.
             // We do this by copying an embedded library file depending on the current OS to an external directory,
             // and then loading that copied file directly.
-            //
-            // Default to Windows.
-            if (!NativeLibrary.TryLoad("portaudio", out PortAudioHandle))
-            {
-                string platform = "win";
-                string file = "portaudio.dll";
-
-                if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-                {
-                    platform = "linux";
-                    file = "libportaudio.so";
-                }
-
-                else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-                {
-                    platform = "osx";
-                    file = "libportaudio.dylib";
-                }
-
-                string sourcePath = $"{Name}/lib/portaudio/{platform}/{file}";                 // Embedded library path
-                string outputDirectory = PortAudioDirectory;                                   // Output directory
-                string absolutePath = $"{outputDirectory}{Path.DirectorySeparatorChar}{file}"; // Total name of the copied library file
-
-                // Ensure the directory exists
-                if (!Directory.Exists(outputDirectory))
-                    Directory.CreateDirectory(outputDirectory);
-
-                // Copy the platform-specific file over to the destination directory.
-                var bytes = ModContent.GetFileBytes(sourcePath);
-                File.WriteAllBytes(absolutePath, bytes);
-
-                // Load the PortAudio library.
-                PortAudioHandle = NativeLibrary.Load(absolutePath);
-            }
+            LoadPortAudio();
 
             ModRunning = true;
             Main.instance.Exiting += Instance_Exiting; // Sets ModRunning to false whenever the game exits

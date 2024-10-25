@@ -50,9 +50,9 @@ namespace MonoStereoMod.Audio
             return Audio.LoopedRead(buffer, offset, count, this, IsLooped, Length, LoopStart, LoopEnd);
         }
 
-        public void Close() => Audio.Dispose();
-
         public void OnStop() => Audio.Unload();
+
+        public void Close() => Audio.Dispose();
 
         public class SongCache(ITerrariaSongSource source) : ISampleProvider, ISeekable
         {

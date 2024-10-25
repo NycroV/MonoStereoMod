@@ -12,12 +12,27 @@ namespace MonoStereoMod.Config
         protected override void DrawSelf(SpriteBatch spriteBatch)
         {
             string displayString = MonoStereoMod.Config.DeviceDisplayName;
+            const int maxNameLength = 31;
+            const int maxDisplayLength = 46;
 
-            if (displayString == "Microsoft Sound Mapper")
-                displayString = Language.GetTextValue("Mods.MonoStereoMod.Configs.MonoStereoConfig.DeviceDefault");
+            if (!MonoStereoMod.Config.DeviceAvailable)
+            {
+                string device = displayString;
+                string unavailable = $"[{Language.GetTextValue("Mods.MonoStereoMod.Configs.MonoStereoConfig.DeviceUnavailable")}] ";
 
-            if (displayString.Length >= 31)
-                displayString += "...";
+                int charsAvailable = maxDisplayLength - unavailable.Length;
+
+                if (device.Length < charsAvailable)
+                    displayString = unavailable + device;
+
+                else
+                    displayString = (unavailable + device)[..(maxDisplayLength - 3)] + "...";
+            }
+
+            else if (displayString.Length >= maxNameLength)
+            {
+                displayString = displayString[..maxNameLength] + "...";
+            }
 
             CalculatedStyle space = GetDimensions();
 

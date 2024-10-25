@@ -8,7 +8,6 @@ using ReLogic.Content.Sources;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Runtime.InteropServices;
 using Terraria;
 using Terraria.Localization;
 using Terraria.ModLoader.Exceptions;

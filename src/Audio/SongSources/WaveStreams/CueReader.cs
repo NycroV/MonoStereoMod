@@ -1,6 +1,5 @@
 ﻿using MonoStereoMod.Systems;
 using NAudio.Wave;
-using System;
 
 namespace MonoStereoMod.Audio
 {
@@ -21,17 +20,7 @@ namespace MonoStereoMod.Audio
             set => Cue.PcmPosition = value;
         }
 
-        public override int Read(byte[] buffer, int offset, int count)
-        {
-            try
-            {
-                return Cue.Read(buffer, offset, count);
-            }
-            catch (Exception ex)
-            {
-                return -1;
-            }
-        }
+        public override int Read(byte[] buffer, int offset, int count) => Cue.Read(buffer, offset, count);
 
         protected override void Dispose(bool disposing) => Cue.Dispose();
     }

@@ -4,13 +4,51 @@ using NAudio.Wave;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.InteropServices;
 using Terraria;
 using Terraria.Audio;
+using Terraria.ModLoader;
 
 namespace MonoStereoMod.Utils
 {
     internal static partial class MonoStereoUtils
     {
+        public static void LoadPortAudio()
+        {
+            if (!NativeLibrary.TryLoad("portaudio", out _))
+            {
+                string platform = "win";
+                string file = "portaudio.dll";
+
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                {
+                    platform = "linux";
+                    file = "libportaudio.so";
+                }
+
+                else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                {
+                    platform = "osx";
+                    file = "libportaudio.dylib";
+                }
+
+                string embeddedFile = $"MonoStereoMod/lib/portaudio/{platform}/{file}";
+                string outputDirectory = string.Join(Path.DirectorySeparatorChar, Main.SavePath, "portaudio", "19.7.0");
+                string outputFile = $"{outputDirectory}{Path.DirectorySeparatorChar}{file}";
+
+                // Ensure the directory exists
+                if (!Directory.Exists(outputDirectory))
+                    Directory.CreateDirectory(outputDirectory);
+
+                // Copy the platform-specific file over to the destination directory.
+                var bytes = ModContent.GetFileBytes(embeddedFile);
+                File.WriteAllBytes(outputFile, bytes);
+
+                // Load the PortAudio library.
+                NativeLibrary.Load(outputFile);
+            }
+        }
+
         // Vanilla WaveBank files have strings that read "null terminated", meaning
         // they will always be a certain number of bytes, but the actual string data
         // ends at the first instance of a null character (literal '\0').

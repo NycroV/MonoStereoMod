@@ -71,8 +71,8 @@ namespace MonoStereoMod.Systems
                 // The number of sample frames (a set of samples, with one for each playback channel) in a full Adpcm block.
                 int frameCountFullBlock = ((blockAlignment / channels) - 7) * 2 + 2;
 
-                int frameCount = (int)value / channels / sizeof(short);
-                int blocks = (int)Math.Floor((float)frameCount / frameCountFullBlock);
+                float frameCount = (float)value / sizeof(short) / channels;
+                int blocks = (int)Math.Floor(frameCount / frameCountFullBlock);
 
                 // We seek to the beginning of the block where we should end up, as we will need
                 // to queue any bytes that are within the next block, but past our seek point.
@@ -145,15 +145,15 @@ namespace MonoStereoMod.Systems
             // Oftentimes, the block size does not line up with how many bytes we actually need.
             // We get around this by rounding the amount of blocks we need up, and then queueing
             // the extra bytes for the next read.
-            List<byte> samples = [];
+            List<byte> bytes = [];
 
             SeekLock.Execute(() =>
             {
                 // Check for leftover bytes from the last block
-                while (BlockLeftovers.TryDequeue(out byte sample) && samples.Count < count)
-                    samples.Add(sample);
+                while (bytes.Count < count && BlockLeftovers.TryDequeue(out byte sampleBits))
+                    bytes.Add(sampleBits);
 
-                int countRemaining = count - samples.Count;
+                int countRemaining = count - bytes.Count;
 
                 // If there were enough bytes in the last block, we don't need to read any more.
                 if (countRemaining == 0)
@@ -165,29 +165,36 @@ namespace MonoStereoMod.Systems
                 // The number of sample frames (a set of samples, with one for each playback channel) in a full Adpcm block.
                 int frameCountFullBlock = ((blockAlignment / channels) - 7) * 2 + 2;
 
-                int frameCount = countRemaining / channels / sizeof(short);
-                int byteCount = (int)Math.Ceiling((float)frameCount / frameCountFullBlock) * blockAlignment;
+                // The number of frames we want to read.
+                float frameCount = (float)countRemaining / sizeof(short) / channels;
 
+                // The actual number of bytes we want to read.
+                // This needs to always be aligned with the Adpcm block alignment. We round the number of blocks
+                // we would need to read for this specific Read() call up to the nearest integer, and queue any
+                // leftovers from that block for the next read call.
+                int byteCount = (int)Math.Ceiling(frameCount / frameCountFullBlock) * blockAlignment;
+
+                // But if the amount of source left is less than the bytes we need, we only read to the end.
                 int bytesToRead = Math.Min(byteCount, (int)(SourceLength - SourcePosition));
                 byte[] sourceBytes = Reader.ReadBytes(bytesToRead);
 
+                // Decode the raw Adpcm data to 16-bit pcm samples.
                 byte[] decoded = ConvertMsAdpcmToPcm(sourceBytes, channels, blockAlignment);
 
                 for (int i = 0; i < decoded.Length; i++)
                 {
-                    // Only copy over the amount we need.
-                    if (samples.Count < count)
-                        samples.Add(decoded[i]);
+                    // Only copy over the amount we need to the output buffer.
+                    if (bytes.Count < count)
+                        bytes.Add(decoded[i]);
 
                     // Anything extra goes into the queue for the next read.
                     else
                         BlockLeftovers.Enqueue(decoded[i]);
                 }
-
-                samples.CopyTo(buffer, offset);
             });
 
-            return samples.Count;
+            bytes.CopyTo(buffer, offset);
+            return bytes.Count;
         }
 
         public void Dispose()

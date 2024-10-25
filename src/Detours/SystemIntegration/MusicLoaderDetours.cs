@@ -5,7 +5,6 @@ using MonoStereo.Sources.Songs;
 using MonoStereoMod.Audio;
 using MonoStereoMod.Systems;
 using NAudio.Wave;
-using ReLogic.Content.Sources;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;

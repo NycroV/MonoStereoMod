@@ -1,10 +1,18 @@
-﻿using Terraria.Localization;
+﻿using Microsoft.Xna.Framework.Graphics;
+using Terraria.Localization;
 using Terraria.ModLoader.Config.UI;
+using Terraria.ModLoader.UI;
 
 namespace MonoStereoMod.Config
 {
     internal class CustomStringElement : ConfigElement<string>
     {
+        protected override void DrawSelf(SpriteBatch spriteBatch)
+        {
+            this.SetBackgroundColor(MonoStereoMod.Config.DeviceAvailable ? UICommon.DefaultUIBlue : new(150, 50, 50));
+            base.DrawSelf(spriteBatch);
+        }
+
         public override void OnBind()
         {
             base.OnBind();

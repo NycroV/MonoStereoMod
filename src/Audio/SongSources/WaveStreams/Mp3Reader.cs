@@ -1,11 +1,7 @@
 ﻿using MonoStereo;
-using MonoStereo.Sources.Songs;
-using MonoStereo.Decoding;
 using NAudio.Wave;
-using System.Collections.Generic;
 using System.IO;
 using XPT.Core.Audio.MP3Sharp;
-using MonoStereoMod.Utils;
 
 namespace MonoStereoMod.Audio
 {
