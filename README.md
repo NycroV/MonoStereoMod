@@ -1,5 +1,5 @@
 # MonoStereoMod
-![icon_workshop](https://github.com/user-attachments/assets/d9573c26-69e0-45aa-a37b-c805f95a3231)
+![icon_workshop](https://github.com/user-attachments/assets/f838ce1e-8162-4556-b94a-8a57eae68b55)
 
 A mod for Terraria that replaces the vanilla audio engine ([FAudio](https://github.com/FNA-XNA/FAudio/tree/master)) with [MonoStereo](https://github.com/NycroV/MonoStereo), a custom audio engine built on top of [NAudio](https://github.com/naudio/NAudio/tree/master) and [PortAudio](https://github.com/PortAudio/portaudio).
 
