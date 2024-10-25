@@ -1,8 +1,8 @@
 Replaces Terraria's default audio engine with MonoStereo, a custom audio engine originally built for MonoGame.
 
-On its own, this mod does not make a difference for players.
+On its own, this mod does not make a difference for players - except for allowing the changing of the audio output device.
 However, for mod developers, using MonoStereo opens up endless possibilities for custom audio effects.
 
-With custom audio sources (both sound effects and songs), dynamic filter application, custom filter integration, and so much more, the possibilities for audio effects and features are limitless.
+With custom audio sources (both sound effects and songs), dynamic filter application, custom filter integration, and much more, the possibilities for audio effects and features are limitless.
 
 If you are a developer interested in implementing MonoStereo support into your mod, check out the documentation on the MonoStereoMod and MonoStereo GitHub pages linked in this mod's workshop description.
