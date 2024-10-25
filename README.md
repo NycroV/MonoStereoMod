@@ -5,6 +5,8 @@ A mod for Terraria that replaces the vanilla audio engine ([FAudio](https://gith
 
 Although MonoStereo was originally designed for [MonoGame](https://github.com/MonoGame/MonoGame) projects, it is itself standalone, and can be used in any C# project - like Terraria!
 
+## What is it?
+
 On its own, this mod does not make a difference for players - except for allowing the changing of the audio output device.
 
 However, for mod developers, using MonoStereo opens up endless possibilities for custom audio effects.
