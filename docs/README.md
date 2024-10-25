@@ -15,6 +15,8 @@ With custom audio sources (both sound effects and songs), dynamic filter applica
 
 > It's also cross-platform!
 
+If you do not want to use MonoStereo in your mod project, no worries! MonoStereoMod is built to work without any changes necessary from other mods, whether they want to support it or not, and does not actively disable FAudio. If you route something directly through FAudio yourself, it will still work completely fine!
+
 ## Getting Started
 Before getting started with integrating MonoStereo into your mod, it is recommended to check out the [MonoStereo usage guides](https://github.com/NycroV/MonoStereo/tree/master/docs). You will not have to perform any setup, as MonoStereoMod handles all of it for you! However, it is a good idea to familiarize yourself with the MonoStereo programming style - things like applying filters, or how source reading works (if you plan to write any custom filters/sources).
 
