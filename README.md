@@ -11,6 +11,8 @@ However, for mod developers, using MonoStereo opens up endless possibilities for
 
 With custom audio sources (both sound effects and songs), dynamic filter application, custom filter integration, and much more, the possibilities for audio effects and features are limitless.
 
+> It's also cross-platform!
+
 ## Getting Started
 Before getting started with integrating MonoStereo into your mod, it is recommended to check out the [MonoStereo usage guides](https://github.com/NycroV/MonoStereo/tree/master/docs). You will not have to perform any setup, as MonoStereoMod handles all of it for you! However, it is a good idea to familiarize yourself with the MonoStereo programming style - things like applying filters, or how source reading works (if you plan to write any custom filters/sources).
 
