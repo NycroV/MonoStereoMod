@@ -23,4 +23,7 @@ Before getting started with integrating MonoStereo into your mod, it is recommen
 After getting a basic understanding of MonoStereo, you can head over to [MonoStereoMod's documentation](https://github.com/NycroV/MonoStereoMod/blob/master/docs/USAGE.md) to see how to effectively integrate it into your mod!
 
 ## Demos
-Below are some demos of audio effects implemented into Terraria using MonoStereo's capabilities:
+### Real-time audio reversal for the Nameless Deity boss fight (Wrath of the Gods)
+The music speed is slowed down, sped back up, and reversed in real-time via a custom filter when Nameless Deity's clock attack begins to spin backwards.
+
+https://github.com/user-attachments/assets/031aab84-b8ce-4c7b-afcf-2505a490412a
