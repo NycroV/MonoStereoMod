@@ -10,18 +10,18 @@ namespace MonoStereoMod.Detours
     {
         #region Hooks, Delegates, and Reflection, Oh My!
 
-        public static Hook ModLoader_UnloadModContent_Hook;
+        public static Hook ModContent_UnloadModContent_Hook;
 
-        public static MethodInfo ModLoader_UnloadModContent_Method = typeof(ModLoader).GetMethod("UnloadModContent", BindingFlags.NonPublic | BindingFlags.Static);
+        public static MethodInfo ModContent_UnloadModContent_Method = typeof(ModContent).GetMethod("UnloadModContent", BindingFlags.NonPublic | BindingFlags.Static);
 
-        public delegate void ModLoader_UnloadModContent_OrigDelegate();
+        public delegate void ModContent_UnloadModContent_OrigDelegate();
 
         #endregion
 
         // We ensure that the audio engine stops running before content is unloaded so that tracks
         // aren't being played and unloaded at the same time, as this can happen in rare edge cases with buffered
         // audio reading.
-        public static void On_ModLoader_UnloadModContent(ModLoader_UnloadModContent_OrigDelegate orig)
+        public static void On_ModContent_UnloadModContent(ModContent_UnloadModContent_OrigDelegate orig)
         {
             MonoStereoMod.ModRunning = false;
 

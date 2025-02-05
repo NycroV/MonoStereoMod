@@ -54,17 +54,7 @@ namespace MonoStereoMod
 
         public override int ModifyRead(float[] buffer, int offset, int count)
         {
-            // We only utilize real-time resampling if the rate is not 1 (no pitch adjustment)
-            // AND the source is not a TerrariaCachedSoundEffectReader. This is because the Terraria reader
-            // resamples the data in its entirety whenever pitch is changed to help reduce
-            // artifacts when placing resampled buffers end to end (in some scenarios).
-            //
-            // This should be investigated to figure out where those artifacts are coming from.
-            // Performance? WinMM? I have no idea, but this system works for now. I'll try to
-            // find the exact cause and fix it if possible in the near future. Live resampling
-            // would be much easier, not to mention more intuitive.
-
-            if (_rate != 1f && (Source is not MonoStereoSoundEffect effect || effect.Source is not TerrariaCachedSoundEffectReader))
+            if (_rate != 1f)
             {
                 int framesRequested = count / AudioStandards.ChannelCount;
                 int inNeeded = resampler.ResamplePrepare(framesRequested, AudioStandards.ChannelCount, out float[] inBuffer, out int inBufferOffset);

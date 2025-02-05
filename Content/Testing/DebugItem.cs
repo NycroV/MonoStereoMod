@@ -25,19 +25,18 @@ namespace MonoStereoMod.Testing
 
         public override bool? UseItem(Player player)
         {
-            if (player.altFunctionUse == 2)
-                DebugPlayer.Apply();
+            var currentTrack = MonoStereoMod.GetSong(Main.curMusic);
 
-            else
-                player.GetModPlayer<DebugPlayer>().slowingDown = true;
+            if (currentTrack.Pitch == 0f)
+                currentTrack.Pitch = -1f;
+
+            else if (currentTrack.Pitch == -1f)
+                currentTrack.Pitch = 1f;
+
+            else if (currentTrack.Pitch == 1f)
+                currentTrack.Pitch = 0f;
 
             return true;
-        }
-
-        public override bool AltFunctionUse(Player player)
-        {
-            var currentTrack = MonoStereoMod.GetSong(Main.curMusic);
-            return currentTrack is not null && !DebugPlayer.timeController.IsAppliedTo(currentTrack);
         }
     }
 }
