@@ -140,6 +140,8 @@ namespace MonoStereoMod
             On_LegacyAudioSystem.PauseAll += On_LegacyAudioSystem_PauseAll; // Also call pause on master outputs (performance)
             On_LegacyAudioSystem.ResumeAll += On_LegacyAudioSystem_ResumeAll; // Also call resume on master outputs (performance)
 
+            ModLoader_UnloadModContent_Hook = new(ModLoader_UnloadModContent_Method, On_ModLoader_UnloadModContent); // Stop the audio engine before unloading content
+
             MusicLoader_LoadMusic_Hook = new(MusicLoader_LoadMusic_Method, On_MusicLoader_LoadMusic); // Use MonoStereo tracks instead of vanilla
 
             SoundEffect_CreateInstance_Hook = new(SoundEffect_CreateInstance_Method, On_SoundEffect_CreateInstance); // Maps FNA sounds to an underlying MonoStereo sound
@@ -165,6 +167,8 @@ namespace MonoStereoMod
             SoundEffectInstance_Stop_Hook = new(SoundEffectInstance_Stop_Method, On_SoundEffectInstance_Stop);
 
             // Application for custom hooks
+            ModLoader_UnloadModContent_Hook.Apply();
+
             MusicLoader_LoadMusic_Hook.Apply();
 
             SoundEffect_CreateInstance_Hook.Apply();
@@ -220,9 +224,12 @@ namespace MonoStereoMod
 
         public override void Unload()
         {
-            ModRunning = false;
+            // OF NOTE:
+            // ModRunning is not set to false in this method in the event that other mods attempt to unload
+            // tracks before the music engine is fully shut down. We detour the mod unloading process to ensure
+            // the music engine shuts down before any tracks are unloaded.
 
-            // This is not a detour, we need to unhook manually
+            // This is not a detour, we need to unhook manually.
             Main.instance.Exiting -= Instance_Exiting;
 
             // Set this back to false just in case another mod has flagged "force high performance."
