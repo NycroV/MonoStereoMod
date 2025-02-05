@@ -45,27 +45,33 @@ namespace MonoStereoMod
             // For some reason, including references to most tMod types does not cause problems, but
             // including the config class causes ILRepack to require a reference to tModLoader.dll,
             // when it otherwise wouldn't. Possibly because of the property attributes? Not 100% sure.
-
-            public static int DeviceNumber { get; internal set; } = -1;
-            public static string DeviceDisplayName { get; internal set; } = "Default";
-            public static bool ForceHighPerformance { get; internal set; } = false;
-            public static bool DeviceAvailable { get; internal set; } = true;
+            //
+            // Default values are in the actual config class.
+            public static bool ForceHighPerformance { get; internal set; }
+            public static int DeviceNumber { get; internal set; }
+            public static string DeviceDisplayName { get; internal set; }
+            public static bool DeviceAvailable { get; internal set; }
+            public static float Latency { get; internal set; }
             internal static readonly QueuedLock OutputLock = new();
 
             // Applies config changes to the output.
             // We do this on a separate thread so the game doesn't lag whenever switching outputs.
-            internal static void ResetOutput(int deviceNumber = -1)
+            internal static void ResetOutput(int? deviceNumber = null, float? latency = null)
             {
-                ThreadPool.QueueUserWorkItem(deviceNumber =>
+                ThreadPool.QueueUserWorkItem((streamParams) =>
                 {
                     OutputLock.Execute(() =>
                     {
-                        int device = (int)deviceNumber;
+                        var stream = ((int? deviceNumber, float? latency))streamParams;
 
-                        if (device == DeviceNumber)
+                        int device = stream.deviceNumber ?? DeviceNumber;
+                        float latency = stream.latency ?? Latency;
+
+                        if (device == DeviceNumber && latency == Latency)
                             return;
 
                         DeviceNumber = device;
+                        Latency = latency;
                         DeviceInfo deviceInfo = device >= 0 ? PortAudio.GetDeviceInfo(device) : PortAudio.GetDeviceInfo(PortAudio.DefaultOutputDevice);
 
                         string displayName = ModRunning && device >= 0 ? (deviceInfo.name ?? "???") : "Default";
@@ -76,6 +82,7 @@ namespace MonoStereoMod
 
                         AudioManager.Output.Dispose();
                         AudioManager.Output = GenerateOutput();
+
                         try
                         {
                             AudioManager.Output.Init(AudioManager.MasterMixer);
@@ -87,14 +94,15 @@ namespace MonoStereoMod
                             DeviceAvailable = false;
                         }
                     });
-                }, deviceNumber);
+                }, (deviceNumber, latency));
             }
 
             // Generates the output based on the user's config.
             internal static IMonoStereoOutput GenerateOutput()
             {
                 int? device = DeviceNumber == -1 ? null : DeviceNumber;
-                return AudioManager.DefaultOutput(device, null);
+                double? latency = Latency == -1 ? null : Latency;
+                return AudioManager.DefaultOutput(device, latency);
             }
         }
 
@@ -104,11 +112,27 @@ namespace MonoStereoMod
         // Starts the MonoStereo engine
         internal static void StartEngine()
         {
-            AudioManager.InitializeCustomOutput(
-                Config.GenerateOutput(),
-                CheckEngine,
-                musicVolume: Main.musicVolume,
-                soundEffectVolume: Main.soundVolume);
+            try
+            {
+                AudioManager.InitializeCustomOutput(
+                    Config.GenerateOutput(),
+                    CheckEngine,
+                    musicVolume: Main.musicVolume,
+                    soundEffectVolume: Main.soundVolume);
+
+                DeviceInfo deviceInfo = Config.DeviceNumber >= 0 ? PortAudio.GetDeviceInfo(Config.DeviceNumber) : PortAudio.GetDeviceInfo(PortAudio.DefaultOutputDevice);
+                string displayName = Config.DeviceNumber >= 0 ? (deviceInfo.name ?? "???") : "Default";
+                Config.DeviceDisplayName = displayName[..int.Min(displayName.Length, 31)];
+
+                Thread.Sleep(100);
+                AudioManager.ThrowIfErrored();
+
+                Config.DeviceAvailable = true;
+            }
+            catch
+            {
+                Config.DeviceAvailable = false;
+            }
         }
 
         // Checks to see if the MonoStereo engine should shut down.

@@ -1,5 +1,7 @@
-﻿using MonoStereo.Outputs;
+﻿using MonoStereo;
+using MonoStereo.Outputs;
 using Newtonsoft.Json;
+using PortAudioSharp;
 using System;
 using System.ComponentModel;
 using Terraria.ModLoader.Config;
@@ -8,25 +10,31 @@ namespace MonoStereoMod.Config
 {
     internal class MonoStereoConfig : ModConfig
     {
-        [JsonIgnore] private bool forceHighPerformance;
         [JsonIgnore] private int[] outputIndexes; // This holds all of the actual output devices, not including input devices.
-        private int deviceNumber; // This IS the actual device number.
+
+        // There is a custom UI element here to hide these fields from the user.
+        // They are not meant to be manually changed, only accessed through the wrapping properties.
+        // However, making them private excludes them from json serialization.
+        // This workaround ensures these values are serialized, but still only modified by the wrapping properties.
+        // These three fields are actually the only objects that are serialized; none of the properties are.
+
+        [CustomModConfigItem(typeof(HiddenBoolElement))][DefaultValue(false)] public bool forceHighPerformance;
+        [CustomModConfigItem(typeof(HiddenFloatElement))][DefaultValue(-1)] public float latency;
+        [CustomModConfigItem(typeof(HiddenIntElement))][DefaultValue(-1)] public int deviceNumber; // This IS the actual device number.
 
         public MonoStereoConfig()
         {
-            forceHighPerformance = MonoStereoMod.Config.ForceHighPerformance;
             outputIndexes = LoadOutputIndexes();
-            deviceNumber = MonoStereoMod.Config.DeviceNumber;
         }
 
         public override ConfigScope Mode => ConfigScope.ClientSide;
 
-
         private static int[] LoadOutputIndexes() => MonoStereoMod.ModRunning ? PortAudioOutput.GetOutputDeviceIndexes() : null;
 
         [Header("Playback")]
-        [DefaultValue(false)]
         [ReloadRequired]
+        [ShowDespiteJsonIgnore]
+        [JsonIgnore]
         public bool ForceHighPerformance
         {
             get => forceHighPerformance;
@@ -34,7 +42,37 @@ namespace MonoStereoMod.Config
         }
 
         [Header("Output")]
-        [DefaultValue(-1)]
+        [ShowDespiteJsonIgnore]
+        [JsonIgnore]
+        [Increment(0.001f)]
+        [Range(0.001f, 0.3f)]
+        public float Latency
+        {
+            get
+            {
+                if (!MonoStereoMod.ModRunning)
+                    return 0;
+
+                if (latency == -1f && AudioManager.Output is PortAudioOutput portaudio && (portaudio.PlaybackStream?.outputParameters.HasValue ?? false))
+                {
+                    int? device = deviceNumber >= 0 ? deviceNumber : null;
+                    var deviceInfo = PortAudio.GetDeviceInfo(device ?? PortAudio.DefaultOutputDevice);
+                    return (float)deviceInfo.defaultLowOutputLatency;
+                }
+
+                return latency;
+            }
+
+            set
+            {
+                if (!MonoStereoMod.ModRunning)
+                    return;
+
+                latency = (float)Math.Round(value, 3);
+                MonoStereoMod.Config.ResetOutput(latency: latency);
+            }
+        }
+
         [Range(-2, 100)]
         [ShowDespiteJsonIgnore]
         [JsonIgnore]
@@ -69,8 +107,7 @@ namespace MonoStereoMod.Config
                 else
                     deviceNumber = outputIndexes[value];
 
-                if (MonoStereoMod.Config.DeviceNumber != deviceNumber)
-                    MonoStereoMod.Config.OutputLock.Execute(() => MonoStereoMod.Config.ResetOutput(deviceNumber));
+                MonoStereoMod.Config.ResetOutput(deviceNumber: deviceNumber);
             }
         }
 
@@ -83,6 +120,7 @@ namespace MonoStereoMod.Config
         {
             MonoStereoMod.Config.ForceHighPerformance = ForceHighPerformance;
             MonoStereoMod.Config.DeviceNumber = deviceNumber;
+            MonoStereoMod.Config.Latency = latency;
         }
     }
 }

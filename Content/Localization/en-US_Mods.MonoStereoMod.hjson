@@ -32,12 +32,17 @@ Configs: {
 			Label: Output Device Name
 			Tooltip: The name of the selected output device.
 		}
-	}
-}
 
-Items: {
-	DebugItem: {
-		DisplayName: Debug Item
-		Tooltip: ""
+		Latency: {
+			Label: Latency
+			Tooltip:
+				'''
+				The latency, in seconds, before audio reaches the output device.
+				The default value for this field is dependent on your device and setup.
+
+				You can make adjustments to this as you like, but if latency is too low, you may experience audio stuttering and artifacts.
+				Recommended values are between 0.03 and 0.1
+				'''
+		}
 	}
 }

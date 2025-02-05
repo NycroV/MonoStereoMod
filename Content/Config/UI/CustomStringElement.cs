@@ -19,7 +19,6 @@ namespace MonoStereoMod.Config
 
             CustomUIPanel textBoxBackground = new();
             textBoxBackground.SetPadding(0);
-            CustomUIFocusInputTextField uIInputTextField = new(Language.GetTextValue("tModLoader.ModConfigTypeHere"));
             textBoxBackground.Top.Set(0f, 0f);
             textBoxBackground.Left.Set(-385, 1f);
             textBoxBackground.Width.Set(375, 0f);
@@ -27,6 +26,7 @@ namespace MonoStereoMod.Config
 
             Append(textBoxBackground);
 
+            CustomUIFocusInputTextField uIInputTextField = new(Language.GetTextValue("tModLoader.ModConfigTypeHere"));
             uIInputTextField.Top.Set(5, 0f);
             uIInputTextField.Left.Set(10, 0f);
             uIInputTextField.Width.Set(-20, 1f);

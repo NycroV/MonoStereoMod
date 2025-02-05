@@ -74,6 +74,16 @@ namespace MonoStereoMod.Audio
 
         public int Read(float[] buffer, int offset, int count)
         {
+            // This means the sound hasn't finished being converted to MonoStereo format yet.
+            // In this case we just fill the buffer with silence, once it's loaded we'll read from that instead.
+            if (CachedSoundEffect is null)
+            {
+                for (int i = 0; i < count; i++)
+                    buffer[offset + i] = 0;
+
+                return count;
+            }
+
             int samplesCopied = 0;
 
             do
