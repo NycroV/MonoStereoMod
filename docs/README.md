@@ -18,9 +18,9 @@ With custom audio sources (both sound effects and songs), dynamic filter applica
 If you do not want to use MonoStereo in your mod project, no worries! MonoStereoMod is built to work without any changes necessary from other mods, whether they want to support it or not, and does not actively disable FAudio. If you route something directly through FAudio yourself, it will still work completely fine!
 
 ## Getting Started
-Before getting started with integrating MonoStereo into your mod, it is recommended to check out the [MonoStereo usage guides](https://github.com/NycroV/MonoStereo/tree/master/docs). You will not have to perform any setup, as MonoStereoMod handles all of it for you! However, it is a good idea to familiarize yourself with the MonoStereo programming style - things like applying filters, or how source reading works (if you plan to write any custom filters/sources).
+It is extremely easy to get started integrating MonoStereo into your mod! You can head over to the [MonoStereoMod documentation](https://github.com/NycroV/MonoStereoMod/blob/master/docs/USAGE.md) for a basic usage guide.
 
-After getting a basic understanding of MonoStereo, you can head over to [MonoStereoMod's documentation](https://github.com/NycroV/MonoStereoMod/blob/master/docs/USAGE.md) to see how to effectively integrate it into your mod!
+If you want to get even more advanced and start working on things like custom audio sources, it is recommended to check out the [MonoStereo usage guides](https://github.com/NycroV/MonoStereo/tree/master/docs). There you'll be able to find much more in-depth explanations and examples!
 
 ## Demos
 ### Real-time audio reversal for the Nameless Deity boss fight (Wrath of the Gods)
