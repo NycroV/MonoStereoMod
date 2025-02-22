@@ -8,6 +8,9 @@
 	  <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	</PropertyGroup>
 	<ItemGroup>
+	  <None Include="bin\Repack.bat" />
+	</ItemGroup>
+	<ItemGroup>
 	  <Reference Include="MonoStereo.Dependencies">
 	    <HintPath>lib\MonoStereo.Dependencies.dll</HintPath>
 	  </Reference>
