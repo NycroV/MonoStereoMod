@@ -85,6 +85,13 @@ MonoStereoMod.AddHighPerformanceMusic(Mod mod, string musicPath); // MonoStereo
 
 From this point on, you can interact with the track as normal. MonoStereoMod handles all the rest!
 
+Additionally, if you think your mod may end up applying a lot of filters, or particularly slow filters, to potentially any or all songs in the game, you can signal to MonoStereoMod that you want ALL songs to use high performance readers instead of the default. Simply add the `MonoStereoMod.ForceHighPerformanceAttribute` attribute to your `Mod` class.
+```cs
+[MonoStereoMod.ForceHighPerformance]
+public class MyMod : Mod
+{ ... }
+```
+
 MonoStereoMod also supplies support for implementing your own custom music sources. Think of something like a live radio.<br/>
 If you want to create a custom music source, it is highly recommended to read the [MonoStereo documentation](https://github.com/NycroV/MonoStereo/blob/master/docs/CUSTOM_SOURCES.md), as that topic is considerably more complex and requires more investment than would be worthwhile here.
 
