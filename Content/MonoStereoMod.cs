@@ -45,13 +45,13 @@ namespace MonoStereoMod
             // For some reason, including references to most tMod types does not cause problems, but
             // including the config class causes ILRepack to require a reference to tModLoader.dll,
             // when it otherwise wouldn't. Possibly because of the property attributes? Not 100% sure.
-            //
-            // Default values are in the actual config class.
-            public static bool ForceHighPerformance { get; internal set; }
-            public static int DeviceNumber { get; internal set; }
+
+            public static bool ForceHighPerformance { get; internal set; } = false;
+            public static int DeviceNumber { get; internal set; } = -1;
+            public static float Latency { get; internal set; } = -1;
+
             public static string DeviceDisplayName { get; internal set; }
             public static bool DeviceAvailable { get; internal set; }
-            public static float Latency { get; internal set; }
             internal static readonly QueuedLock OutputLock = new();
 
             // Applies config changes to the output.
