@@ -46,6 +46,14 @@ namespace MonoStereoMod
             set => soundControl.Panning = value;
         }
 
+        // Override volume to apply after resampling instead of before.
+        // This prevents weird quirks with resampling audio at very low volumes.
+        public override float Volume
+        {
+            get => soundControl.Volume;
+            set => soundControl.Volume = value;
+        }
+
         public bool IsPlaying => !IsDisposed && PlaybackState == PlaybackState.Playing;
 
         public bool IsPaused => !IsDisposed && PlaybackState == PlaybackState.Paused;
@@ -58,8 +66,7 @@ namespace MonoStereoMod
 
         public override void Stop()
         {
-            base.Stop();
-            ClearFilters();
+            PlaybackState = PlaybackState.Stopped;
         }
 
         public void Reuse()
@@ -105,7 +112,11 @@ namespace MonoStereoMod
                 base.Close();
 
             else
+            {
                 AudioManager.RemoveSongInput(this);
+                ClearFilters();
+                Source.OnStop();
+            }
         }
 
         public override void Dispose()

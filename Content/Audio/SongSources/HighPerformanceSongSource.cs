@@ -132,10 +132,10 @@ namespace MonoStereoMod.Audio
 
             public void Unload()
             {
+                IsLoaded = false;
                 AudioData = null;
                 SamplesCached = 0;
                 WriteIndex = 0;
-                IsLoaded = false;
             }
 
             public void Dispose()

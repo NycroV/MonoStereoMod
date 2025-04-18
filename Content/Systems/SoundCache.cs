@@ -41,7 +41,11 @@ namespace MonoStereoMod.Systems
         public static CachedSoundEffect LoadCachedSound(Xna.SoundEffect sound)
         {
             var monoStereoEffect = sound.GetMonoStereoEffect();
-            Cache[sound] = monoStereoEffect;
+
+            lock (Cache) {
+                Cache[sound] = monoStereoEffect;
+            }
+
             return monoStereoEffect;
         }
 

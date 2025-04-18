@@ -11,12 +11,31 @@ namespace MonoStereoMod
 {
     public class MonoStereoSoundEffect : SoundEffect
     {
+        private readonly TerrariaFilter soundControl = new();
+
+        public MonoStereoSoundEffect(ISoundEffectSource source) : base(source)
+        {
+            AddFilter(soundControl);
+        }
+
         public override IEnumerable<AudioFilter> Filters
         {
             get
             {
                 var filters = base.Filters;
                 return filters.TakeLast(filters.Count() - 1);
+            }
+        }
+
+        public override float Volume
+        {
+            get => soundControl.Volume;
+            set
+            {
+                soundControl.Volume = value;
+
+                if (SoundCache.TryGetFNA(this, out var sound))
+                    sound.set_Volume(Volume);
             }
         }
 
@@ -44,19 +63,7 @@ namespace MonoStereoMod
                     sound.set_Pan(Pan);
             }
         }
-
-        public override float Volume
-        {
-            get => base.Volume;
-            set
-            {
-                base.Volume = value;
-
-                if (SoundCache.TryGetFNA(this, out var sound))
-                    sound.set_Volume(Volume);
-            }
-        }
-
+        
         public override bool IsLooped
         {
             get => base.IsLooped;
@@ -70,13 +77,6 @@ namespace MonoStereoMod
         }
 
         public bool IsDisposed { get; private set; } = false;
-
-        private readonly TerrariaFilter soundControl = new();
-
-        public MonoStereoSoundEffect(ISoundEffectSource source) : base(source)
-        {
-            AddFilter(soundControl);
-        }
 
         // This ensures the track is only disposed if we actually want to dispose it.
         public override void Close()
