@@ -41,8 +41,11 @@ namespace MonoStereoMod.Utils
                     Directory.CreateDirectory(outputDirectory);
 
                 // Copy the platform-specific file over to the destination directory.
-                var bytes = ModContent.GetFileBytes(embeddedFile);
-                File.WriteAllBytes(outputFile, bytes);
+                if (!File.Exists(outputFile))
+                {
+                    var bytes = ModContent.GetFileBytes(embeddedFile);
+                    File.WriteAllBytes(outputFile, bytes);
+                }
 
                 // Load the PortAudio library.
                 NativeLibrary.Load(outputFile);

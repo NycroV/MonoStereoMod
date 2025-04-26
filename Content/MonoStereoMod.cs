@@ -141,6 +141,10 @@ namespace MonoStereoMod
         // Start the engine and detour TML/FNA to use our engine instead
         public override void Load()
         {
+            // Do not implement audio engine detours on the server.
+            if (Main.dedServ)
+                return;
+
             // First, we need to make sure that PortAudio is loadable.
             // We do this by copying an embedded library file depending on the current OS to an external directory,
             // and then loading that copied file directly.
