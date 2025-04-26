@@ -37,7 +37,7 @@ namespace MonoStereoMod
         public float Pitch
         {
             get => soundControl.PitchFactor;
-            set => soundControl.PitchFactor = MathHelper.Clamp(value, -1f, 1f);
+            set => soundControl.PitchFactor = value;
         }
 
         public float Pan
@@ -94,9 +94,12 @@ namespace MonoStereoMod
                         Volume = value;
                         break;
                     }
+
                 case "Pitch":
-                    Pitch = value;
+                    value = MathHelper.Clamp(value, -1f, 1f);
+                    Pitch = (float)Math.Pow(2d, value);
                     break;
+
                 case "Pan":
                     Pan = value;
                     break;

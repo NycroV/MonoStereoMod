@@ -1,7 +1,9 @@
-﻿using Microsoft.Xna.Framework.Audio;
+﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Audio;
 using MonoMod.RuntimeDetour;
 using MonoStereoMod.Systems;
 using NAudio.Wave;
+using System;
 using System.Reflection;
 
 namespace MonoStereoMod.Detours
@@ -118,7 +120,8 @@ namespace MonoStereoMod.Detours
                 return;
             }
 
-            instance.Pitch = value;
+            value = MathHelper.Clamp(value, -1f, 1f);
+            instance.Pitch = (float)Math.Pow(2d, value);
         }
 
         public static void set_SoundEffectInstance_Volume(SoundEffectInstance_set_Volume_OrigDelegate orig, SoundEffectInstance self, float value)

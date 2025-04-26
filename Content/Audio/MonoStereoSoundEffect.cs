@@ -44,7 +44,6 @@ namespace MonoStereoMod
             get => soundControl.PitchFactor;
             set
             {
-                value = MathHelper.Clamp(value, -1f, 1f);
                 soundControl.PitchFactor = value;
 
                 if (SoundCache.TryGetFNA(this, out var sound))
