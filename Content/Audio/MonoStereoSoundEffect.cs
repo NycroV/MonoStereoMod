@@ -46,8 +46,11 @@ namespace MonoStereoMod
             {
                 soundControl.PitchFactor = value;
 
+                // The FNA version of the pitch value needs to be stored on the (-1, 1) scale as
+                // opposed to (0, inf). By this point, no matter where this value is being set from, it
+                // should be on the (0, inf) scale - so we make sure to change it back before setting.
                 if (SoundCache.TryGetFNA(this, out var sound))
-                    sound.set_Pitch(Pitch);
+                    sound.set_Pitch(MathF.Log(value, 2f));
             }
         }
 
