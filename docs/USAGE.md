@@ -59,7 +59,7 @@ This applies a filter to the actual music mixer - all the currently playing musi
 
 To remove a filter once you're done, use `RemoveFilter(myFilter)`.
 
-If you expect a track will have lots of filters applied to it at one time, make sure to read through the next section to ensure you're getitng the best performance.
+If you expect a track will have lots of filters applied to it at one time, make sure to read through the next section to ensure you're getting the best performance.
 
 </details>
 
@@ -124,7 +124,6 @@ ActiveSound sound = SoundEngine.PlaySound(in SoundStyle style, Vector2? position
 
 // Use this.
 MonoStereoSoundEffect sound = MonoStereoMod.PlaySound(in SoundStyle style, Vector2? position, SoundUpdateCallback callback);
-</details>
 ```
 
 All you need to do is trade out the `SoundEngine` class for `MonoStereoMod`, as all of the method parameters are exactly the same.<br/>
@@ -136,7 +135,7 @@ The other options are for when a sound has already been played and you only have
 ```
 bool success = MonoStereoMod.TryGetActiveSound(SlotId slotId, out MonoStereoSoundEffect sound);
 // or...
-bool success = MonoStereoMod.TryGetActiveSound(SlotId slotId, out MonoStereoSoundEffect sound);
+bool success = MonoStereoMod.TryGetActiveSound(ActiveSound activeSound, out MonoStereoSoundEffect sound);
 ```
 
 These methods take in either a `SlotId` or `ActiveSound` object, returned by vanilla's methods, and attempts to retrieve the corresponding MonoStereo component.<br/>
