@@ -1,10 +1,10 @@
 global using static MonoStereoMod.Utils.MonoStereoUtils;
 using static MonoStereoMod.Detours.Detours;
-
 using Microsoft.Xna.Framework;
 using MonoStereo;
 using MonoStereo.Sources;
 using MonoStereo.Structures;
+using MonoStereo.Structures.SampleProviders;
 using MonoStereoMod.Systems;
 using MonoStereoMod.Utils;
 using PortAudioSharp;
@@ -12,7 +12,6 @@ using ReLogic.Utilities;
 using System;
 using System.Linq;
 using System.Threading;
-using MonoStereo.Structures.SampleProviders;
 using Terraria;
 using Terraria.Audio;
 using Terraria.ID;
@@ -110,18 +109,18 @@ namespace MonoStereoMod
 
         // Used to determine whether the engine should be active.
         public static bool ModRunning { get; internal set; } = false;
-        
+
         /// <summary>
         /// Reference to <see cref="MonoStereoEngine.MasterMixer"/>. Only here for consistency’s sake with <see cref="MusicMixer"/> and <see cref="SoundEffectMixer"/>.
         /// </summary>
         public static AudioMixer<AudioMixer> MasterMixer { get; private set; }
-        
+
         /// <summary>
         /// The static accessor for <see cref="MonoStereoEngine.AudioMixers{Song}"/>.<br/>
         /// Accessing this can slightly improve performance over indexing the active mixers multiple times.
         /// </summary>
         public static AudioMixer<Song> MusicMixer { get; private set; }
-        
+
         /// <summary>
         /// The static accessor for <see cref="MonoStereoEngine.AudioMixers{SoundEffect}"/>.<br/>
         /// Accessing this can slightly improve performance over indexing the active mixers multiple times.
@@ -180,7 +179,7 @@ namespace MonoStereoMod
                 return;
 
             StartEngine();
-            
+
             MasterMixer = MonoStereoEngine.MasterMixer;
             MusicMixer = MonoStereoEngine.AudioMixers<Song>();
             SoundEffectMixer = MonoStereoEngine.AudioMixers<SoundEffect>();
@@ -277,10 +276,10 @@ namespace MonoStereoMod
 
             var setFactories = SetFactories();
             var factoryToRemove = setFactories.FirstOrDefault(s => s.ContainingClassName() == nameof(MusicID), null);
-            
+
             if (factoryToRemove is not null)
                 setFactories.Remove(factoryToRemove);
-            
+
             LoaderManager.Get<MusicLoader>().ResizeArrays();
         }
 

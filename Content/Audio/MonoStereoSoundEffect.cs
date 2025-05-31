@@ -1,5 +1,4 @@
-﻿using Microsoft.Xna.Framework;
-using MonoStereo;
+﻿using MonoStereo;
 using MonoStereo.Filters;
 using MonoStereo.Sources;
 using MonoStereoMod.Systems;
@@ -65,7 +64,7 @@ namespace MonoStereoMod
                     sound.set_Pan(Pan);
             }
         }
-        
+
         public override bool IsLooped
         {
             get => base.IsLooped;

@@ -42,7 +42,8 @@ namespace MonoStereoMod.Systems
         {
             var monoStereoEffect = sound.GetMonoStereoEffect();
 
-            lock (Cache) {
+            lock (Cache)
+            {
                 Cache[sound] = monoStereoEffect;
             }
 

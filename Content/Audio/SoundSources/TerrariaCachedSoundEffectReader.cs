@@ -47,7 +47,7 @@ namespace MonoStereoMod.Audio
         {
             Comments = sound.Comments.ToDictionary();
             CachedSoundEffect = sound;
-            
+
             // If the load took too long and the sound was already disposed,
             // we call dispose again to ensure that we don't accidentally keep
             // comments/the sound instance loaded on this object.
@@ -120,7 +120,7 @@ namespace MonoStereoMod.Audio
         }
 
         private bool disposed = false;
-        
+
         public void Dispose()
         {
             disposed = true;

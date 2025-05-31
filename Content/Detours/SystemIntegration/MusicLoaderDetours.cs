@@ -1,5 +1,4 @@
 ﻿using MonoMod.RuntimeDetour;
-using MonoStereo.Decoding;
 using MonoStereo.Sources;
 using MonoStereo.Sources.Songs;
 using MonoStereoMod.Audio;

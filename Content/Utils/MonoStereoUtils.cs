@@ -1,13 +1,9 @@
-﻿using ATL;
-using MonoStereo;
-using MonoStereo.Structures;
+﻿using MonoStereo.Structures;
 using MonoStereoMod.Systems;
 using NAudio.Wave;
-using NAudio.Wave.SampleProviders;
 using ReLogic.Content.Sources;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using Terraria;
 using Terraria.Localization;
 using Terraria.ModLoader.Exceptions;

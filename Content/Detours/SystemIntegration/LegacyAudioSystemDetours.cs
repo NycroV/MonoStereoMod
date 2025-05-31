@@ -1,9 +1,7 @@
 ﻿using MonoStereo;
-using MonoStereo.Decoding;
 using MonoStereo.Sources;
 using MonoStereo.Sources.Songs;
 using MonoStereoMod.Audio;
-using MonoStereoMod.Content.Audio;
 using NAudio.Wave;
 using ReLogic.Content.Sources;
 using System.Collections.Generic;

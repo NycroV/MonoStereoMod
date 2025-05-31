@@ -1,11 +1,7 @@
 ﻿using MonoStereo.Sources;
 using MonoStereo.Sources.Songs;
 using NAudio.Wave;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MonoStereoMod.Content.Audio
 {
