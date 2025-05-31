@@ -3,6 +3,7 @@ using MonoStereo.Decoding;
 using MonoStereo.Sources;
 using MonoStereo.Sources.Songs;
 using MonoStereoMod.Audio;
+using MonoStereoMod.Content.Audio;
 using NAudio.Wave;
 using ReLogic.Content.Sources;
 using System.Collections.Generic;
@@ -17,8 +18,8 @@ namespace MonoStereoMod.Detours
         // Updates MonoStereo mixer volumes whenever vanilla update behavior occurs.
         public static void On_LegacyAudioSystem_Update(On_LegacyAudioSystem.orig_Update orig, LegacyAudioSystem self)
         {
-            AudioManager.MusicVolume = Main.musicVolume.GetRealVolume();
-            AudioManager.SoundEffectVolume = Main.soundVolume;
+            MonoStereoMod.MusicMixer.Volume = Main.musicVolume.GetRealVolume();
+            MonoStereoMod.SoundEffectMixer.Volume = Main.soundVolume;
 
             orig(self);
         }
@@ -40,48 +41,38 @@ namespace MonoStereoMod.Detours
                 try
                 {
                     Stream contentStream = contentSource.OpenStream(assetPathWithExtension);
-                    WaveStream waveStream = null;
-                    Dictionary<string, string> comments = null;
 
-                    switch (extension)
+                    WaveStream waveStream;
+                    Dictionary<string, string> comments;
+
+                    if (extension == ".xwb")
                     {
-                        case ".ogg":
-                            waveStream = new OggReader(contentStream);
-                            comments = (waveStream as OggReader).Comments.ComposeComments();
-                            break;
+                        CueReader cueStream = contentStream as CueReader;
+                        comments = [];
 
-                        case ".wav":
-                            comments = contentStream.ReadComments();
-                            waveStream = new WaveFileReader(contentStream);
-                            break;
+                        if (cueStream.Cue.LoopStart > 0)
+                            comments.Add("LOOPSTART", cueStream.Cue.LoopStart.ToString());
 
-                        case ".mp3":
-                            comments = contentStream.ReadComments();
-                            waveStream = new Mp3Reader(contentStream);
-                            break;
+                        if (cueStream.Cue.LoopEnd > 0)
+                            comments.Add("LOOPEND", cueStream.Cue.LoopEnd.ToString());
 
-                        case ".xwb":
-                            CueReader cueStream = contentStream as CueReader;
-                            comments = [];
-
-                            if (cueStream.Cue.LoopStart > 0)
-                                comments.Add("LOOPSTART", cueStream.Cue.LoopStart.ToString());
-
-                            if (cueStream.Cue.LoopEnd > 0)
-                                comments.Add("LOOPEND", cueStream.Cue.LoopEnd.ToString());
-
-                            waveStream = cueStream;
-                            break;
+                        waveStream = cueStream;
                     }
 
-                    if (waveStream != null)
+                    else
                     {
-                        StreamFormattingSongSource source = new(waveStream, comments);
-                        ISongSource reader = MonoStereoMod.Config.ForceHighPerformance ? new HighPerformanceSongSource(source) : BufferedSongReader.Create(source);
-
-                        reader.IsLooped = true;
-                        return new MonoStereoAudioTrack(reader);
+                        waveStream = UniversalAudioSource.GetWaveStream(contentStream, extension, false, out comments);
                     }
+
+                    var source = new UniversalAudioSource(waveStream, assetPathWithExtension, comments)
+                    {
+                        IsLooped = true
+                    };
+
+                    ISongSource reader = MonoStereoMod.Config.ForceHighPerformance ? new HighPerformanceSongSource(source) : BufferedSongReader.Create(source);
+
+                    reader.IsLooped = true;
+                    return new MonoStereoAudioTrack(reader);
                 }
                 catch
                 {
@@ -98,14 +89,14 @@ namespace MonoStereoMod.Detours
         // Pause the mixer in addition to each sound (performance benefit).
         public static void On_LegacyAudioSystem_PauseAll(On_LegacyAudioSystem.orig_PauseAll orig, LegacyAudioSystem self)
         {
-            AudioManager.MasterMixer.Pause();
+            MonoStereoEngine.MasterMixer.Pause();
             orig(self);
         }
 
         // Resume the mixer in addition to each sound.
         public static void On_LegacyAudioSystem_ResumeAll(On_LegacyAudioSystem.orig_ResumeAll orig, LegacyAudioSystem self)
         {
-            AudioManager.MasterMixer.Resume();
+            MonoStereoEngine.MasterMixer.Resume();
             orig(self);
         }
     }

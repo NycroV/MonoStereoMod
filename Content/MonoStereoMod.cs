@@ -12,8 +12,10 @@ using ReLogic.Utilities;
 using System;
 using System.Linq;
 using System.Threading;
+using MonoStereo.Structures.SampleProviders;
 using Terraria;
 using Terraria.Audio;
+using Terraria.ID;
 using Terraria.ModLoader;
 
 namespace MonoStereoMod
@@ -80,13 +82,13 @@ namespace MonoStereoMod
                         if (!ModRunning)
                             return;
 
-                        AudioManager.Output.Dispose();
-                        AudioManager.Output = GenerateOutput();
+                        MonoStereoEngine.Output.Dispose();
+                        MonoStereoEngine.Output = GenerateOutput();
 
                         try
                         {
-                            AudioManager.Output.Init(AudioManager.MasterMixer);
-                            AudioManager.Output.Play();
+                            MonoStereoEngine.Output.Init(MonoStereoEngine.MasterMixer);
+                            MonoStereoEngine.Output.Play();
                             DeviceAvailable = true;
                         }
                         catch
@@ -102,30 +104,51 @@ namespace MonoStereoMod
             {
                 int? device = DeviceNumber == -1 ? null : DeviceNumber;
                 double? latency = Latency == -1 ? null : Latency;
-                return AudioManager.DefaultOutput(device, latency);
+                return MonoStereoEngine.DefaultOutput(device, latency);
             }
         }
 
         // Used to determine whether the engine should be active.
         public static bool ModRunning { get; internal set; } = false;
+        
+        /// <summary>
+        /// Reference to <see cref="MonoStereoEngine.MasterMixer"/>. Only here for consistency’s sake with <see cref="MusicMixer"/> and <see cref="SoundEffectMixer"/>.
+        /// </summary>
+        public static AudioMixer<AudioMixer> MasterMixer { get; private set; }
+        
+        /// <summary>
+        /// The static accessor for <see cref="MonoStereoEngine.AudioMixers{Song}"/>.<br/>
+        /// Accessing this can slightly improve performance over indexing the active mixers multiple times.
+        /// </summary>
+        public static AudioMixer<Song> MusicMixer { get; private set; }
+        
+        /// <summary>
+        /// The static accessor for <see cref="MonoStereoEngine.AudioMixers{SoundEffect}"/>.<br/>
+        /// Accessing this can slightly improve performance over indexing the active mixers multiple times.
+        /// </summary>
+        public static AudioMixer<SoundEffect> SoundEffectMixer { get; private set; }
 
         // Starts the MonoStereo engine
         internal static void StartEngine()
         {
             try
             {
-                AudioManager.InitializeCustomOutput(
+                MonoStereoEngine.InitializeCustomOutput(
                     Config.GenerateOutput(),
                     CheckEngine,
-                    musicVolume: Main.musicVolume,
-                    soundEffectVolume: Main.soundVolume);
+                    masterVolume: 1f,
+                    audioMixerTypesAndVolumes: new()
+                    {
+                        [typeof(Song)] = Main.musicVolume,
+                        [typeof(SoundEffect)] = Main.soundVolume
+                    });
 
                 DeviceInfo deviceInfo = Config.DeviceNumber >= 0 ? PortAudio.GetDeviceInfo(Config.DeviceNumber) : PortAudio.GetDeviceInfo(PortAudio.DefaultOutputDevice);
                 string displayName = Config.DeviceNumber >= 0 ? (deviceInfo.name ?? "???") : "Default";
                 Config.DeviceDisplayName = displayName[..int.Min(displayName.Length, 31)];
 
                 Thread.Sleep(100);
-                AudioManager.ThrowIfErrored();
+                MonoStereoEngine.ThrowIfErrored();
 
                 Config.DeviceAvailable = true;
             }
@@ -157,6 +180,10 @@ namespace MonoStereoMod
                 return;
 
             StartEngine();
+            
+            MasterMixer = MonoStereoEngine.MasterMixer;
+            MusicMixer = MonoStereoEngine.AudioMixers<Song>();
+            SoundEffectMixer = MonoStereoEngine.AudioMixers<SoundEffect>();
 
             // Each detour below contains a short comment explaining why we need it/what it does.
 
@@ -247,6 +274,13 @@ namespace MonoStereoMod
 
             // This ensures that all music tracks that have already been
             // loaded are reloaded to use MonoStereo sources.
+
+            var setFactories = SetFactories();
+            var factoryToRemove = setFactories.FirstOrDefault(s => s.ContainingClassName() == nameof(MusicID), null);
+            
+            if (factoryToRemove is not null)
+                setFactories.Remove(factoryToRemove);
+            
             LoaderManager.Get<MusicLoader>().ResizeArrays();
         }
 
@@ -270,7 +304,7 @@ namespace MonoStereoMod
             if (Main.audioSystem is not LegacyAudioSystem system)
                 return;
 
-            while (AudioManager.IsRunning)
+            while (MonoStereoEngine.IsRunning)
                 Thread.Sleep(100);
 
             // These tracks are not included in the mappings, nor the automatic unloading

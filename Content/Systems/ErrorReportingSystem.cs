@@ -6,6 +6,6 @@ namespace MonoStereoMod.Systems
     // This forwards any errors thrown on the audio thread to tML for logging.
     internal class ErrorReportingSystem : ModSystem
     {
-        public override void PostUpdateEverything() => AudioManager.ThrowIfErrored();
+        public override void PostUpdateEverything() => MonoStereoEngine.ThrowIfErrored();
     }
 }

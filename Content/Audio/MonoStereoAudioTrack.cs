@@ -108,18 +108,10 @@ namespace MonoStereoMod
 
         public void Update() { }
 
-        // This ensures the track is only disposed if we actually want to dispose it.
-        public override void Close()
+        public override void RemoveInput()
         {
-            if (IsDisposed)
-                base.Close();
-
-            else
-            {
-                AudioManager.RemoveSongInput(this);
-                ClearFilters();
-                Source.OnStop();
-            }
+            base.RemoveInput();
+            ClearFilters();
         }
 
         public override void Dispose()

@@ -26,7 +26,7 @@ namespace MonoStereoMod.Detours
             MonoStereoMod.ModRunning = false;
 
             // Check to see if the audio engine has shut down yet.
-            while (AudioManager.IsRunning)
+            while (MonoStereoEngine.IsRunning)
                 Thread.Sleep(100);
 
             orig();

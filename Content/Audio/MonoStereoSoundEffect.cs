@@ -78,22 +78,10 @@ namespace MonoStereoMod
             }
         }
 
-        public bool IsDisposed { get; private set; } = false;
-
-        // This ensures the track is only disposed if we actually want to dispose it.
-        public override void Close()
+        public override void RemoveInput()
         {
-            if (IsDisposed)
-                base.Close();
-
-            else
-                AudioManager.RemoveSoundInput(this);
-        }
-
-        public override void Dispose()
-        {
-            IsDisposed = true;
-            base.Dispose();
+            base.RemoveInput();
+            ClearFilters();
         }
     }
 }

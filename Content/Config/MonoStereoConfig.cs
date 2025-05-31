@@ -53,7 +53,7 @@ namespace MonoStereoMod.Config
                 if (!MonoStereoMod.ModRunning)
                     return 0;
 
-                if (latency == -1f && AudioManager.Output is PortAudioOutput portaudio && (portaudio.PlaybackStream?.outputParameters.HasValue ?? false))
+                if (latency == -1f && MonoStereoEngine.Output is PortAudioOutput portaudio && (portaudio.PlaybackStream?.outputParameters.HasValue ?? false))
                 {
                     int? device = deviceNumber >= 0 ? deviceNumber : null;
                     var deviceInfo = PortAudio.GetDeviceInfo(device ?? PortAudio.DefaultOutputDevice);

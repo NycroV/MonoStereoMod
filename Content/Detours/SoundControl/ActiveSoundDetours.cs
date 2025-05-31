@@ -70,8 +70,10 @@ namespace MonoStereoMod.Detours
                     break;
             }*/
 
-            // The only difference is we manually apply ambient volume, since MonoStereo
-            // doesn't contain an ambient track category
+            // The only difference is we manually apply ambient volume.
+            // While MonoStereo contains the ability to mix sounds and ambience differently,
+            // FNA does not, and since we are detouring the FNA methods for playing, there
+            // is no way for us to make distinctions between the two sound types.
             if (self.Style.Type == SoundType.Ambient)
             {
                 // Ambient tracks go into the sound player

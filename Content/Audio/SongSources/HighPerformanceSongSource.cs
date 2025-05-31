@@ -9,9 +9,9 @@ using System.Threading;
 
 namespace MonoStereoMod.Audio
 {
-    internal class HighPerformanceSongSource : ITerrariaSongSource
+    internal class HighPerformanceSongSource : ITerrariaSongSource, IDisposable
     {
-        public HighPerformanceSongSource(ITerrariaSongSource source)
+        public HighPerformanceSongSource(ISeekableSongSource source)
         {
             Source = source;
             Audio = new(source);
@@ -22,11 +22,14 @@ namespace MonoStereoMod.Audio
             Position = source.Position;
             source.Position = 0;
 
-            LoopStart = source.LoopStart;
-            LoopEnd = source.LoopEnd;
+            if (source is ILoopTags loopTags)
+            {
+                LoopStart = loopTags.LoopStart;
+                LoopEnd = loopTags.LoopEnd;
+            }
         }
 
-        private readonly ITerrariaSongSource Source;
+        private readonly ISeekableSongSource Source;
         public ISongSource BaseSource => Source;
 
         public SongCache Audio { get; }
@@ -35,8 +38,8 @@ namespace MonoStereoMod.Audio
         public WaveFormat WaveFormat { get; }
         public PlaybackState PlaybackState { get; set; } = PlaybackState.Stopped;
 
-        public long LoopStart { get; }
-        public long LoopEnd { get; }
+        public long LoopStart { get; } = -1;
+        public long LoopEnd { get; } = -1;
         public bool IsLooped { get; set; }
 
         public long Position { get => Audio.Position; set => Audio.Position = value; }
@@ -50,15 +53,15 @@ namespace MonoStereoMod.Audio
             return Audio.LoopedRead(buffer, offset, count, this, IsLooped, Length, LoopStart, LoopEnd);
         }
 
-        public void OnStop() => Audio.Unload();
+        public void OnRemoveInput() => Audio.Unload();
 
-        public void Close() => Audio.Dispose();
+        public void Dispose() => Audio.Dispose();
 
-        public class SongCache(ITerrariaSongSource source) : ISampleProvider, ISeekable
+        public class SongCache(ISeekableSongSource source) : ISampleProvider, ISeekable, IDisposable
         {
             public float[] AudioData = null;
 
-            public ITerrariaSongSource Source = source;
+            public ISeekableSongSource Source = source;
 
             public WaveFormat WaveFormat { get; } = source.WaveFormat;
 
@@ -100,7 +103,7 @@ namespace MonoStereoMod.Audio
                 {
                     // The song cache is passed to this WaitCallback.
                     SongCache audio = sender as SongCache;
-                    ITerrariaSongSource source = audio.Source;
+                    ISeekableSongSource source = audio.Source;
 
                     while (audio.SamplesCached < audio.Length)
                     {
@@ -141,7 +144,7 @@ namespace MonoStereoMod.Audio
             public void Dispose()
             {
                 Unload();
-                Source.Close();
+                Source.Dispose();
             }
         }
     }

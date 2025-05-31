@@ -41,35 +41,38 @@ namespace MonoStereoMod.Detours
                 extension = extension.Replace(MonoStereoMod.HighPerformanceExtensionPrefix, ".");
             }
 
-            path = $"tmod:{path}{extension}";
-            Stream contentStream = ModContent.OpenRead(path, true);
+            path = $"{path}{extension}";
+            Stream contentStream = ModContent.OpenRead($"tmod:{path}", true);
 
             WaveStream waveStream;
             Dictionary<string, string> comments;
 
-            switch (extension)
+            if (extension == ".xwb")
             {
-                case ".ogg":
-                    waveStream = new OggReader(contentStream);
-                    comments = (waveStream as OggReader).Comments.ComposeComments();
-                    break;
+                // We use a custom content source that will return CueReader's as the content stream.
+                CueReader cueStream = contentStream as CueReader;
+                comments = [];
 
-                case ".wav":
-                    comments = contentStream.ReadComments();
-                    waveStream = new WaveFileReader(contentStream);
-                    break;
+                if (cueStream.Cue.LoopStart > 0)
+                    comments.Add("LOOPSTART", cueStream.Cue.LoopStart.ToString());
 
-                case ".mp3":
-                    comments = contentStream.ReadComments();
-                    waveStream = new Mp3Reader(contentStream);
-                    break;
+                if (cueStream.Cue.LoopEnd > 0)
+                    comments.Add("LOOPEND", cueStream.Cue.LoopEnd.ToString());
 
-                default:
-                    throw new FileLoadException($"Unknown music extension {extension}");
+                waveStream = cueStream;
             }
 
-            StreamFormattingSongSource source = new(waveStream, comments);
-            ISongSource reader = highPerformance ? new HighPerformanceSongSource(source) : BufferedSongReader.Create(source, 2f);
+            else
+            {
+                waveStream = UniversalAudioSource.GetWaveStream(contentStream, extension, false, out comments);
+            }
+
+            var source = new UniversalAudioSource(waveStream, path, comments)
+            {
+                IsLooped = true
+            };
+
+            ISongSource reader = MonoStereoMod.Config.ForceHighPerformance ? new HighPerformanceSongSource(source) : BufferedSongReader.Create(source);
 
             reader.IsLooped = true;
             return new MonoStereoAudioTrack(reader);

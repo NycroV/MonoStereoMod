@@ -1,13 +1,11 @@
 ﻿using MonoStereo;
 using MonoStereo.Sources;
 using MonoStereo.Structures;
-using NAudio.Dsp;
 using NAudio.Wave;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace MonoStereoMod.Audio
 {
@@ -17,7 +15,7 @@ namespace MonoStereoMod.Audio
 
         public string FileName { get => CachedSoundEffect.FileName; }
 
-        public WaveFormat WaveFormat => CachedSoundEffect.WaveFormat;
+        public WaveFormat WaveFormat => CachedSoundEffect?.WaveFormat ?? new(AudioStandards.SampleRate, AudioStandards.ChannelCount);
 
         public Dictionary<string, string> Comments { get; private set; }
 
@@ -49,6 +47,12 @@ namespace MonoStereoMod.Audio
         {
             Comments = sound.Comments.ToDictionary();
             CachedSoundEffect = sound;
+            
+            // If the load took too long and the sound was already disposed,
+            // we call dispose again to ensure that we don't accidentally keep
+            // comments/the sound instance loaded on this object.
+            if (disposed)
+                Dispose();
         }
 
         // Loads the sound synchronously
@@ -115,6 +119,14 @@ namespace MonoStereoMod.Audio
             return samplesCopied;
         }
 
-        public void Close() { }
+        private bool disposed = false;
+        
+        public void Dispose()
+        {
+            disposed = true;
+            Comments?.Clear();
+            Comments = null;
+            CachedSoundEffect = null;
+        }
     }
 }

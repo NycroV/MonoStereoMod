@@ -47,7 +47,7 @@ namespace MonoStereoMod.Systems
                 comments.Add("LOOPLENGTH", xnaEffect.GetLoopLength().ToString());
 
             // Reformat the data into a new CachedSoundEffect.
-            return new CachedSoundEffect(provider, xnaEffect.Name, comments);
+            return CachedSoundEffect.Create(provider, xnaEffect.Name, comments);
         }
     }
 }
