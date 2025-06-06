@@ -253,7 +253,6 @@ namespace MonoStereoMod
 
             // This ensures that all music tracks that have already been
             // loaded are reloaded to use MonoStereo sources.
-
             var setFactories = SetFactories();
             var factoryToRemove = setFactories.FirstOrDefault(s => s.ContainingClassName() == nameof(MusicID), null);
 
