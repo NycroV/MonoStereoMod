@@ -15,6 +15,7 @@ using System.Threading;
 using Terraria;
 using Terraria.Audio;
 using Terraria.ModLoader;
+using Terraria.ID;
 
 namespace MonoStereoMod
 {
@@ -247,6 +248,13 @@ namespace MonoStereoMod
 
             // This ensures that all music tracks that have already been
             // loaded are reloaded to use MonoStereo sources.
+
+            var setFactories = SetFactories();
+            var factoryToRemove = setFactories.FirstOrDefault(s => s.ContainingClassName() == nameof(MusicID), null);
+
+            if (factoryToRemove is not null)
+                setFactories.Remove(factoryToRemove);
+
             LoaderManager.Get<MusicLoader>().ResizeArrays();
         }
 

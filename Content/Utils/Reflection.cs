@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Content;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.ModLoader.Config.UI;
 
@@ -20,6 +21,12 @@ namespace MonoStereoMod.Utils
         // Used to force a reload of audio tracks, which allows us to inject our own cue readers (which utilizie MonoStereo) in place of the vanilla readers.
         private static readonly MethodInfo resizeArrays = typeof(ILoader).GetMethod("ResizeArrays", BindingFlags.NonPublic | BindingFlags.Instance);
         public static void ResizeArrays(this ILoader loader) => resizeArrays.Invoke(loader, null);
+
+        private static readonly FieldInfo setFactories = typeof(SetFactory).GetField("SetFactories", BindingFlags.Static | BindingFlags.NonPublic);
+        public static List<SetFactory> SetFactories() => (List<SetFactory>)setFactories.GetValue(null);
+
+        private static readonly FieldInfo containingClassName = typeof(SetFactory).GetField("ContainingClassName", BindingFlags.Instance | BindingFlags.NonPublic);
+        public static string ContainingClassName(this SetFactory setFactory) => (string)containingClassName.GetValue(setFactory);
 
         // All of these "set_XXXXX" methods set the underlying field for the SoundEffectInstance's corresponding property.
         // We don't override the property's getter, so we need to make sure this value is set. This allows us to change the
