@@ -10,7 +10,7 @@ using System.Linq;
 using Terraria;
 using Terraria.Audio;
 
-namespace MonoStereoMod
+namespace MonoStereoMod.Audio
 {
     public class MonoStereoAudioTrack : Song, IAudioTrack
     {

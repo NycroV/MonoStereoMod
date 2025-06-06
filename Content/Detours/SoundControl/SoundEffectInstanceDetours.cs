@@ -12,16 +12,6 @@ namespace MonoStereoMod.Detours
     {
         #region Property Hooks
 
-        public static Hook SoundEffectInstance_set_IsLooped_Hook;
-
-        public static Hook SoundEffectInstance_set_Pan_Hook;
-
-        public static Hook SoundEffectInstance_set_Pitch_Hook;
-
-        public static Hook SoundEffectInstance_set_Volume_Hook;
-
-        public static Hook SoundEffectInstance_get_State_Hook;
-
         public static readonly MethodInfo SoundEffectInstance_set_IsLooped_Method = typeof(SoundEffectInstance).GetProperty("IsLooped", BindingFlags.Instance | BindingFlags.Public).GetSetMethod();
 
         public static readonly MethodInfo SoundEffectInstance_set_Pan_Method = typeof(SoundEffectInstance).GetProperty("Pan", BindingFlags.Instance | BindingFlags.Public).GetSetMethod();
@@ -45,18 +35,6 @@ namespace MonoStereoMod.Detours
         #endregion
 
         #region Method Hooks
-
-        public static Hook SoundEffectInstance_Dispose_Hook;
-
-        public static Hook SoundEffectInstance_Apply3D_Hook;
-
-        public static Hook SoundEffectInstance_Play_Hook;
-
-        public static Hook SoundEffectInstance_Pause_Hook;
-
-        public static Hook SoundEffectInstance_Resume_Hook;
-
-        public static Hook SoundEffectInstance_Stop_Hook;
 
         public static readonly MethodInfo SoundEffectInstance_Dispose_Method = typeof(SoundEffectInstance).GetMethod("Dispose", BindingFlags.Instance | BindingFlags.NonPublic, [typeof(bool)]);
 

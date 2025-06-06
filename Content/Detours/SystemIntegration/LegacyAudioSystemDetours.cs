@@ -16,8 +16,8 @@ namespace MonoStereoMod.Detours
         // Updates MonoStereo mixer volumes whenever vanilla update behavior occurs.
         public static void On_LegacyAudioSystem_Update(On_LegacyAudioSystem.orig_Update orig, LegacyAudioSystem self)
         {
-            MonoStereoMod.MusicMixer.Volume = Main.musicVolume.GetRealVolume();
-            MonoStereoMod.SoundEffectMixer.Volume = Main.soundVolume;
+            MonoStereoModAPI.SongMixer.Volume = Main.musicVolume.GetRealVolume();
+            MonoStereoModAPI.SoundEffectMixer.Volume = Main.soundVolume;
 
             orig(self);
         }
@@ -67,7 +67,7 @@ namespace MonoStereoMod.Detours
                         IsLooped = true
                     };
 
-                    ISongSource reader = MonoStereoMod.Config.ForceHighPerformance ? new HighPerformanceSongSource(source) : BufferedSongReader.Create(source);
+                    ISongSource reader = MonoStereoModAPI.Config.ForceHighPerformance ? new HighPerformanceSongSource(source) : BufferedSongReader.Create(source);
 
                     reader.IsLooped = true;
                     return new MonoStereoAudioTrack(reader);

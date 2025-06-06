@@ -9,7 +9,7 @@ namespace MonoStereoMod.Config
     {
         protected override void DrawSelf(SpriteBatch spriteBatch)
         {
-            this.SetBackgroundColor(MonoStereoMod.Config.DeviceAvailable ? UICommon.DefaultUIBlue : new(150, 50, 50));
+            this.SetBackgroundColor(MonoStereoModAPI.Config.DeviceAvailable ? UICommon.DefaultUIBlue : new(150, 50, 50));
             base.DrawSelf(spriteBatch);
         }
 

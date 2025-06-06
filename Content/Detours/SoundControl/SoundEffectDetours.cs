@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework.Audio;
 using MonoMod.RuntimeDetour;
+using MonoStereoMod.Audio;
 using MonoStereoMod.Systems;
 using System.Reflection;
 
@@ -8,10 +9,6 @@ namespace MonoStereoMod.Detours
     internal static partial class Detours
     {
         #region Hooks, Delegates, and Reflection, Oh My!
-
-        public static Hook SoundEffect_CreateInstance_Hook;
-
-        public static Hook SoundEffect_Play_Hook;
 
         public static MethodInfo SoundEffect_CreateInstance_Method = typeof(SoundEffect).GetMethod("CreateInstance", BindingFlags.Public | BindingFlags.Instance);
 

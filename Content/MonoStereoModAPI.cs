@@ -1,10 +1,10 @@
 global using static MonoStereoMod.Utils.MonoStereoUtils;
-using static MonoStereoMod.Detours.Detours;
 using Microsoft.Xna.Framework;
 using MonoStereo;
 using MonoStereo.Sources;
 using MonoStereo.Structures;
 using MonoStereo.Structures.SampleProviders;
+using MonoStereoMod.Audio;
 using MonoStereoMod.Systems;
 using MonoStereoMod.Utils;
 using PortAudioSharp;
@@ -16,10 +16,11 @@ using Terraria;
 using Terraria.Audio;
 using Terraria.ID;
 using Terraria.ModLoader;
+using static MonoStereoMod.Detours.Detours;
 
 namespace MonoStereoMod
 {
-    public class MonoStereoMod : Mod
+    public class MonoStereoModAPI : Mod
     {
         /// <summary>
         /// Allows other mods to force "high performance mode" to be active.
@@ -111,7 +112,7 @@ namespace MonoStereoMod
         public static bool ModRunning { get; internal set; } = false;
 
         /// <summary>
-        /// Reference to <see cref="MonoStereoEngine.MasterMixer"/>. Only here for consistency’s sake with <see cref="MusicMixer"/> and <see cref="SoundEffectMixer"/>.
+        /// Reference to <see cref="MonoStereoEngine.MasterMixer"/>. Only here for consistency’s sake with <see cref="SongMixer"/> and <see cref="SoundEffectMixer"/>.
         /// </summary>
         public static AudioMixer<AudioMixer> MasterMixer { get; private set; }
 
@@ -119,7 +120,7 @@ namespace MonoStereoMod
         /// The static accessor for <see cref="MonoStereoEngine.AudioMixers{Song}"/>.<br/>
         /// Accessing this can slightly improve performance over indexing the active mixers multiple times.
         /// </summary>
-        public static AudioMixer<Song> MusicMixer { get; private set; }
+        public static AudioMixer<Song> SongMixer { get; private set; }
 
         /// <summary>
         /// The static accessor for <see cref="MonoStereoEngine.AudioMixers{SoundEffect}"/>.<br/>
@@ -181,7 +182,7 @@ namespace MonoStereoMod
             StartEngine();
 
             MasterMixer = MonoStereoEngine.MasterMixer;
-            MusicMixer = MonoStereoEngine.AudioMixers<Song>();
+            SongMixer = MonoStereoEngine.AudioMixers<Song>();
             SoundEffectMixer = MonoStereoEngine.AudioMixers<SoundEffect>();
 
             // Each detour below contains a short comment explaining why we need it/what it does.
@@ -194,52 +195,31 @@ namespace MonoStereoMod
             On_LegacyAudioSystem.PauseAll += On_LegacyAudioSystem_PauseAll; // Also call pause on master outputs (performance)
             On_LegacyAudioSystem.ResumeAll += On_LegacyAudioSystem_ResumeAll; // Also call resume on master outputs (performance)
 
-            ModContent_UnloadModContent_Hook = new(ModContent_UnloadModContent_Method, On_ModContent_UnloadModContent); // Stop the audio engine before unloading content
+            MonoModHooks.Add(ModContent_UnloadModContent_Method, On_ModContent_UnloadModContent); // Stop the audio engine before unloading content
 
-            MusicLoader_LoadMusic_Hook = new(MusicLoader_LoadMusic_Method, On_MusicLoader_LoadMusic); // Use MonoStereo tracks instead of vanilla
+            MonoModHooks.Add(MusicLoader_LoadMusic_Method, On_MusicLoader_LoadMusic); // Use MonoStereo tracks instead of vanilla
 
-            SoundEffect_CreateInstance_Hook = new(SoundEffect_CreateInstance_Method, On_SoundEffect_CreateInstance); // Maps FNA sounds to an underlying MonoStereo sound
-            SoundEffect_Play_Hook = new(SoundEffect_Play_Method, On_SoundEffect_Play); // Maps FNA sounds to an underlying MonoStereo sound
+            MonoModHooks.Add(SoundEffect_CreateInstance_Method, On_SoundEffect_CreateInstance); // Maps FNA sounds to an underlying MonoStereo sound
+            MonoModHooks.Add(SoundEffect_Play_Method, On_SoundEffect_Play); // Maps FNA sounds to an underlying MonoStereo sound
 
             // SoundEffectInstance property hooks
             // Each of these property hooks does the exact same thing - gets the state of the underlying MonoStereo instance instead
             // of the FNA instance. Since they all do exactly the same thing, there isn't a need to individually comment each line.
-            SoundEffectInstance_set_IsLooped_Hook = new(SoundEffectInstance_set_IsLooped_Method, set_SoundEffectInstance_IsLooped);
-            SoundEffectInstance_set_Pan_Hook = new(SoundEffectInstance_set_Pan_Method, set_SoundEffectInstance_Pan);
-            SoundEffectInstance_set_Pitch_Hook = new(SoundEffectInstance_set_Pitch_Method, set_SoundEffectInstance_Pitch);
-            SoundEffectInstance_set_Volume_Hook = new(SoundEffectInstance_set_Volume_Method, set_SoundEffectInstance_Volume);
-            SoundEffectInstance_get_State_Hook = new(SoundEffectInstance_get_State_Method, get_SoundEffectInstance_State);
+            MonoModHooks.Add(SoundEffectInstance_set_IsLooped_Method, set_SoundEffectInstance_IsLooped);
+            MonoModHooks.Add(SoundEffectInstance_set_Pan_Method, set_SoundEffectInstance_Pan);
+            MonoModHooks.Add(SoundEffectInstance_set_Pitch_Method, set_SoundEffectInstance_Pitch);
+            MonoModHooks.Add(SoundEffectInstance_set_Volume_Method, set_SoundEffectInstance_Volume);
+            MonoModHooks.Add(SoundEffectInstance_get_State_Method, get_SoundEffectInstance_State);
 
             // SoundEffectInstance method hooks
             // Each of these property hooks does the exact same thing - forwards method calls to the underlying MonoStereo instance instead
             // of the FNA instance. Since they all do exactly the same thing, there isn't a need to individually comment each line.
-            SoundEffectInstance_Dispose_Hook = new(SoundEffectInstance_Dispose_Method, On_SoundEffectInstance_Dispose);
-            SoundEffectInstance_Apply3D_Hook = new(SoundEffectInstance_Apply3D_Method, On_SoundEffectInstance_Apply3D);
-            SoundEffectInstance_Play_Hook = new(SoundEffectInstance_Play_Method, On_SoundEffectInstance_Play);
-            SoundEffectInstance_Pause_Hook = new(SoundEffectInstance_Pause_Method, On_SoundEffectInstance_Pause);
-            SoundEffectInstance_Resume_Hook = new(SoundEffectInstance_Resume_Method, On_SoundEffectInstance_Resume);
-            SoundEffectInstance_Stop_Hook = new(SoundEffectInstance_Stop_Method, On_SoundEffectInstance_Stop);
-
-            // Application for custom hooks
-            ModContent_UnloadModContent_Hook.Apply();
-
-            MusicLoader_LoadMusic_Hook.Apply();
-
-            SoundEffect_CreateInstance_Hook.Apply();
-            SoundEffect_Play_Hook.Apply();
-
-            SoundEffectInstance_set_IsLooped_Hook.Apply();
-            SoundEffectInstance_set_Pan_Hook.Apply();
-            SoundEffectInstance_set_Pitch_Hook.Apply();
-            SoundEffectInstance_set_Volume_Hook.Apply();
-            SoundEffectInstance_get_State_Hook.Apply();
-
-            SoundEffectInstance_Dispose_Hook.Apply();
-            SoundEffectInstance_Apply3D_Hook.Apply();
-            SoundEffectInstance_Play_Hook.Apply();
-            SoundEffectInstance_Pause_Hook.Apply();
-            SoundEffectInstance_Resume_Hook.Apply();
-            SoundEffectInstance_Stop_Hook.Apply();
+            MonoModHooks.Add(SoundEffectInstance_Dispose_Method, On_SoundEffectInstance_Dispose);
+            MonoModHooks.Add(SoundEffectInstance_Apply3D_Method, On_SoundEffectInstance_Apply3D);
+            MonoModHooks.Add(SoundEffectInstance_Play_Method, On_SoundEffectInstance_Play);
+            MonoModHooks.Add(SoundEffectInstance_Pause_Method, On_SoundEffectInstance_Pause);
+            MonoModHooks.Add(SoundEffectInstance_Resume_Method, On_SoundEffectInstance_Resume);
+            MonoModHooks.Add(SoundEffectInstance_Stop_Method, On_SoundEffectInstance_Stop);
 
             // Other mods that implement certain custom audio filters may choose to force "high performance mode" to be active.
             // High performance mode sacrifices a certain amount of memory overhead to cache all data for any songs that are currently playing,

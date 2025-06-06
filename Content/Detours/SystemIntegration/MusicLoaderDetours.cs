@@ -16,8 +16,6 @@ namespace MonoStereoMod.Detours
     {
         #region Hooks, Delegates, and Reflection, Oh My!
 
-        public static Hook MusicLoader_LoadMusic_Hook;
-
         public static MethodInfo MusicLoader_LoadMusic_Method = typeof(MusicLoader).GetMethod("LoadMusic", BindingFlags.NonPublic | BindingFlags.Static);
 
         public delegate IAudioTrack MusicLoader_LoadMusic_OrigDelegate(string path, string extension);
@@ -33,11 +31,11 @@ namespace MonoStereoMod.Detours
                 return SoundCache.GetCustomMusic(path);
 
             // This means the track has been marked to be "high performance" by the user.
-            bool highPerformance = MonoStereoMod.Config.ForceHighPerformance;
-            if (extension.StartsWith(MonoStereoMod.HighPerformanceExtensionPrefix))
+            bool highPerformance = MonoStereoModAPI.Config.ForceHighPerformance;
+            if (extension.StartsWith(MonoStereoModAPI.HighPerformanceExtensionPrefix))
             {
                 highPerformance = true;
-                extension = extension.Replace(MonoStereoMod.HighPerformanceExtensionPrefix, ".");
+                extension = extension.Replace(MonoStereoModAPI.HighPerformanceExtensionPrefix, ".");
             }
 
             path = $"{path}{extension}";
@@ -71,7 +69,7 @@ namespace MonoStereoMod.Detours
                 IsLooped = true
             };
 
-            ISongSource reader = MonoStereoMod.Config.ForceHighPerformance ? new HighPerformanceSongSource(source) : BufferedSongReader.Create(source);
+            ISongSource reader = MonoStereoModAPI.Config.ForceHighPerformance ? new HighPerformanceSongSource(source) : BufferedSongReader.Create(source);
 
             reader.IsLooped = true;
             return new MonoStereoAudioTrack(reader);

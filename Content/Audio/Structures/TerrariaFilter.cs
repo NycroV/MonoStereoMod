@@ -2,7 +2,7 @@
 using MonoStereo.Filters;
 using NAudio.Dsp;
 
-namespace MonoStereoMod
+namespace MonoStereoMod.Audio
 {
     internal class TerrariaFilter : AudioFilter
     {

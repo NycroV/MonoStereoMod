@@ -29,7 +29,7 @@ namespace MonoStereoMod.Config
 
         public override ConfigScope Mode => ConfigScope.ClientSide;
 
-        private static int[] LoadOutputIndexes() => MonoStereoMod.ModRunning ? PortAudioOutput.GetOutputDeviceIndexes() : null;
+        private static int[] LoadOutputIndexes() => MonoStereoModAPI.ModRunning ? PortAudioOutput.GetOutputDeviceIndexes() : null;
 
         [Header("Playback")]
         [ReloadRequired]
@@ -50,7 +50,7 @@ namespace MonoStereoMod.Config
         {
             get
             {
-                if (!MonoStereoMod.ModRunning)
+                if (!MonoStereoModAPI.ModRunning)
                     return 0;
 
                 if (latency == -1f && MonoStereoEngine.Output is PortAudioOutput portaudio && (portaudio.PlaybackStream?.outputParameters.HasValue ?? false))
@@ -65,11 +65,11 @@ namespace MonoStereoMod.Config
 
             set
             {
-                if (!MonoStereoMod.ModRunning)
+                if (!MonoStereoModAPI.ModRunning)
                     return;
 
                 latency = (float)Math.Round(value, 3);
-                MonoStereoMod.Config.ResetOutput(latency: latency);
+                MonoStereoModAPI.Config.ResetOutput(latency: latency);
             }
         }
 
@@ -80,7 +80,7 @@ namespace MonoStereoMod.Config
         {
             get
             {
-                if (!MonoStereoMod.ModRunning)
+                if (!MonoStereoModAPI.ModRunning)
                     return -1;
 
                 outputIndexes ??= LoadOutputIndexes();
@@ -89,7 +89,7 @@ namespace MonoStereoMod.Config
 
             set
             {
-                if (!MonoStereoMod.ModRunning)
+                if (!MonoStereoModAPI.ModRunning)
                     return;
 
                 outputIndexes ??= LoadOutputIndexes();
@@ -107,7 +107,7 @@ namespace MonoStereoMod.Config
                 else
                     deviceNumber = outputIndexes[value];
 
-                MonoStereoMod.Config.ResetOutput(deviceNumber: deviceNumber);
+                MonoStereoModAPI.Config.ResetOutput(deviceNumber: deviceNumber);
             }
         }
 
@@ -118,9 +118,9 @@ namespace MonoStereoMod.Config
 
         public override void OnChanged()
         {
-            MonoStereoMod.Config.ForceHighPerformance = ForceHighPerformance;
-            MonoStereoMod.Config.DeviceNumber = deviceNumber;
-            MonoStereoMod.Config.Latency = latency;
+            MonoStereoModAPI.Config.ForceHighPerformance = ForceHighPerformance;
+            MonoStereoModAPI.Config.DeviceNumber = deviceNumber;
+            MonoStereoModAPI.Config.Latency = latency;
         }
     }
 }

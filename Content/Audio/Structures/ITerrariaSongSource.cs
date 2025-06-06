@@ -1,6 +1,7 @@
-﻿using MonoStereo.Structures;
+﻿using MonoStereo.Sources;
+using MonoStereo.Structures;
 
-namespace MonoStereo.Sources.Songs
+namespace MonoStereoMod.Audio
 {
     public interface ITerrariaSongSource : ISeekableSongSource, ILoopTags
     { }

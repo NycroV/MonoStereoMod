@@ -11,11 +11,11 @@ namespace MonoStereoMod.Config
 
         protected override void DrawSelf(SpriteBatch spriteBatch)
         {
-            string displayString = MonoStereoMod.Config.DeviceDisplayName;
+            string displayString = MonoStereoModAPI.Config.DeviceDisplayName;
             const int maxNameLength = 31;
             const int maxDisplayLength = 46;
 
-            if (!MonoStereoMod.Config.DeviceAvailable)
+            if (!MonoStereoModAPI.Config.DeviceAvailable)
             {
                 string device = displayString;
                 string unavailable = $"[{Language.GetTextValue("Mods.MonoStereoMod.Configs.MonoStereoConfig.DeviceUnavailable")}] ";

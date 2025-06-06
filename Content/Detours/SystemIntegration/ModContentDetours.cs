@@ -10,8 +10,6 @@ namespace MonoStereoMod.Detours
     {
         #region Hooks, Delegates, and Reflection, Oh My!
 
-        public static Hook ModContent_UnloadModContent_Hook;
-
         public static MethodInfo ModContent_UnloadModContent_Method = typeof(ModContent).GetMethod("UnloadModContent", BindingFlags.NonPublic | BindingFlags.Static);
 
         public delegate void ModContent_UnloadModContent_OrigDelegate();
@@ -23,7 +21,7 @@ namespace MonoStereoMod.Detours
         // audio reading.
         public static void On_ModContent_UnloadModContent(ModContent_UnloadModContent_OrigDelegate orig)
         {
-            MonoStereoMod.ModRunning = false;
+            MonoStereoModAPI.ModRunning = false;
 
             // Check to see if the audio engine has shut down yet.
             while (MonoStereoEngine.IsRunning)
