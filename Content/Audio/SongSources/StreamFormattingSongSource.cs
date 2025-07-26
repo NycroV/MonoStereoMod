@@ -20,7 +20,7 @@ namespace MonoStereoMod.Audio
             SourceLoopStart = loopStart;
             SourceLoopEnd = loopEnd;
 
-            LoopedSource = new(WaveStream, LoopStart, LoopEnd);
+            LoopedSource = new(WaveStream, loopStart, loopEnd);
             SourceLength = LoopedSource.Length;
 
             // Resampled reading
